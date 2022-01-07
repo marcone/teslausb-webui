@@ -21,7 +21,7 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function callCgi(url, action) {
+async function callCgi(url, action) {
     const response = await fetch(url, {method: 'GET'});
     if (!response.headers.get('content-type').includes('text')) {
         throw new Error(`fail to ${action}`);

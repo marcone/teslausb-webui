@@ -61,3 +61,9 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.tools {
+    margin: 0 16px 16px;
+}
+</style>

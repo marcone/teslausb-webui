@@ -1,7 +1,8 @@
 import Viewer from './components/Viewer';
 import Diagnostics from './components/Diagnostics';
 import Log from './components/Log';
-// import Tools from './components/Tools';
+import Tools from './components/Tools';
+import Recordings from './components/Recordings';
 
 export default [
     {
@@ -14,7 +15,11 @@ export default [
     },
     {
         path: '/tools',
-        component: Diagnostics,
+        component: Tools,
+    },
+    {
+        path: '/recordings',
+        component: Recordings,
     },
     {
         path: '/viewer',

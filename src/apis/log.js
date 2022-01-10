@@ -12,7 +12,7 @@ function readFile(url, range) {
     });
 }
 
-export async function readLiveFile(url, onUpdate = noop) {
+export function readLiveFile(url, onUpdate = noop) {
     let fullContent;
     start();
 
@@ -23,7 +23,7 @@ export async function readLiveFile(url, onUpdate = noop) {
         const response = await readFile(url);
         fullContent = await response.text();
         onUpdate(fullContent);
-        next(fileContent.length);
+        next(fullContent.length);
     }
 
     async function next(offset) {

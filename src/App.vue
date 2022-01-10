@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div id="app" v-resize="handleResize">
         <Header :items="links" />
         <div class="tab-content">
             <router-view></router-view>
@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import {resize} from 'veui';
 import i18nMixin from './mixins/i18n';
 import "veui-theme-dls/common.less";
 import Header from "./components/Header/Index.vue";
@@ -23,15 +24,36 @@ const links = [
 
 export default {
     name: "AppRoot",
+    directives: {
+        resize
+    },
     components: {
         Header,
     },
     mixins: [i18nMixin],
+    data() {
+        return {
+            compact: false,
+        }
+    },
     computed: {
         links() {
             return links.map(([key, ...rest]) => {
                 return [this.t(key), ...rest];
             });
+        }
+    },
+    methods: {
+        handleResize() {
+            this.compact = this.$el.offsetWidth < 500;
+        }
+    },
+    mounted() {
+        this.handleResize();
+    },
+    provide() {
+        return {
+            compact: this.compact,
         }
     }
 };

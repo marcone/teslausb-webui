@@ -1,6 +1,6 @@
 <template>
     <span :class="{compact}">
-        <VeuiButton v-if="compact" ui="primary square s" @click="handleLocaleClick">{{shortLabel}}</VeuiButton>
+        <VeuiButton v-if="compact" ui="text xl" @click="handleLocaleClick">{{shortLabel}}</VeuiButton>
         <VeuiSelect class="locale-select" :options="availableLocales" :value="currentLocale"
             :expanded.sync="localeExpanded" @change="handleLocaleChange" />
     </span>

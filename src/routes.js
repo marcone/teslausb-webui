@@ -1,4 +1,4 @@
-import Viewer from './components/Viewer';
+import Viewer from './components/Viewer/Index.vue';
 import Diagnostics from './components/Diagnostics';
 import LogPage from './components/LogPage';
 import Tools from './components/Tools';

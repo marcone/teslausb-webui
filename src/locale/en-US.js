@@ -17,6 +17,7 @@ register('AppRoot', common);
 
 register('LogPage', common);
 register('LogView', {
+    'loading': 'Loading...',
     'download': 'Download ${title}',
 });
 

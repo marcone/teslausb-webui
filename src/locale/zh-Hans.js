@@ -6,7 +6,7 @@ function register(ns, data) {
 
 const common = {
     'diagnostics': '诊断',
-    'archiveloop-log': '归档循环日志',
+    'archiveloop-log': '归档日志',
     'setup-log': '安装日志',
     'tools': '工具',
     'recordings': '行车视频列表',
@@ -17,6 +17,7 @@ register('AppRoot', common);
 
 register('LogPage', common);
 register('LogView', {
+    'loading': '加载中...',
     'download': '下载${title}',
 });
 

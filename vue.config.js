@@ -5,6 +5,7 @@ const proxyTarget = process.env.PROXY_TARGET;
 module.exports = {
     devServer: {
         proxy: {
+            '/*.log': { target: proxyTarget },
             '/cgi-bin/': { target: proxyTarget },
             '/TeslaCam/': { target: proxyTarget }
         }

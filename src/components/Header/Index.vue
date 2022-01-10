@@ -1,9 +1,12 @@
 <template>
-    <div class="header" v-resize="handleResize">
+    <div class="header">
         <component :is="component" :items="items">
             <template #extra="{compact}">
                 <VeuiLink class="github-link" ui="strong s" target="_blank" to="https://github.com/marcone/teslausb">
-                    {{ compact ? 'GitHub' : 'TeslaUSB on GitHub' }}
+                    <template v-if="compact">GitHub</template>
+                    <template v-else>
+                        <big><strong>TeslaUSB</strong></big> on GitHub
+                    </template>
                 </VeuiLink>
             </template>
         </component>
@@ -11,58 +14,18 @@
 </template>
 
 <script>
-import {resize} from 'veui';
 import Menu from './Menu';
 import Tabs from './Tabs';
 
-const locales = [
-    {
-        label: 'English',
-        value: 'en-US',
-        short: 'EN',
-    },
-    {
-        label: '简体中文',
-        value: 'zh-Hans',
-        short: '简'
-    }
-];
-
 export default {
-    directives: {
-        resize
-    },
     props: {
+        compact: Boolean,
         items: Array
     },
-    data() {
-        return {
-            locales,
-            localeExpanded: false,
-            compact: false,
-        }
-    },
     computed: {
-        currentLocale() {
-            return i18n.locale;
-        },
         component() {
             return this.compact ? Menu : Tabs;
         }
-    },
-    methods: {
-        handleResize() {
-            this.compact = this.$el.offsetWidth < 500;
-        },
-        handleLocaleClick() {
-            this.localeExpanded = true;
-        },
-        handleLocaleChange(val) {
-            i18n.locale = val;
-        }
-    },
-    mounted() {
-        this.handleResize();
     }
 }
 </script>

@@ -5,7 +5,7 @@
         </div>
         <LogView v-if="triggered" :title="t('diagnostics')" fileName="diagnostics.txt">
             <template #buttons="loading">
-                <VeuiButton @click="refresh" :loading="loading">Refresh Diagnostics</VeuiButton>
+                <VeuiButton @click="refresh" :disabled="loading">Refresh Diagnostics</VeuiButton>
             </template>
         </LogView>
     </div>
@@ -45,7 +45,7 @@ export default {
 
 <style lang="less" scoped>
 .diagnostics {
-    margin: 16px;
-    height: calc(100vh - 50px - 32px);
+    margin: 16px 16px 0;
+    height: calc(100vh - 50px - 20px);
 }
 </style>

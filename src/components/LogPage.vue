@@ -27,7 +27,7 @@ export default {
 
 <style lang="less" scoped>
 .log-page {
-    margin: 16px;
-    height: calc(100vh - 50px - 32px);
+    margin: 16px 16px 0;
+    height: calc(100vh - 50px - 20px);
 }
 </style>

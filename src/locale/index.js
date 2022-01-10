@@ -5,9 +5,8 @@ import './en-US';
 import './zh-Hans';
 
 i18nManager.locale = getLocale();
-
-
 export default i18nManager;
+
 
 function getLocale() {
     const query = new URLSearchParams(location.search);
@@ -18,11 +17,11 @@ export const availableLocales = [
     {
         label: 'English',
         value: 'en-US',
-        short: 'EN',
+        short: '🇬🇧',
     },
     {
         label: '简体中文',
         value: 'zh-Hans',
-        short: '简'
+        short: '🇨🇳',
     }
 ];

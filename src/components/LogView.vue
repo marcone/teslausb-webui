@@ -3,13 +3,14 @@
         <div class="bar">
             <div>
                 <slot name="buttons" :loading="!content" />
-                <VeuiButton ui="s" :loading="!content" @click="handleDownload">
+                <VeuiButton ui="s" :disabled="!content" @click="handleDownload">
                     {{ t('download', {title}) }}
                 </VeuiButton>
             </div>
             <div class="update-time">{{ ft(updateTime) }}</div>
         </div>
         <div class="content">
+            <VeuiLoading :loading="!content">{{ t('loading') }}</VeuiLoading>
             <pre>{{content}}</pre>
         </div>
     </div>
@@ -19,7 +20,6 @@
 import {saveAs} from 'file-saver';
 import i18nMixin from '../mixins/i18n';
 import {readLiveFile} from '../apis/log';
-import {formatTimeFromNow} from '../locale';
 
 export default {
     name: 'LogView',
@@ -43,7 +43,6 @@ export default {
         }
     },
     methods: {
-        formatTimeFromNow,
         refresh() {
             if (this.stop) {
                 this.stop();

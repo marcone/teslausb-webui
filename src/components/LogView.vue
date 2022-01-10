@@ -2,13 +2,12 @@
     <div class="log-view">
         <div class="bar">
             <div>
-                <VeuiLoading :loading="!content" />
-                <slot name="buttons" />
-                <VeuiButton :disabled="!content" @click="handleDownload">
-                    Download {{title}}
+                <slot name="buttons" :loading="!content" />
+                <VeuiButton ui="s" :loading="!content" @click="handleDownload">
+                    {{ t('download', {title}) }}
                 </VeuiButton>
             </div>
-            <div class="update-time">{{ updateTime }}</div>
+            <div class="update-time">{{ ft(updateTime) }}</div>
         </div>
         <div class="content">
             <pre>{{content}}</pre>
@@ -17,9 +16,14 @@
 </template>
 
 <script>
+import {saveAs} from 'file-saver';
+import i18nMixin from '../mixins/i18n';
 import {readLiveFile} from '../apis/log';
+import {formatTimeFromNow} from '../locale';
 
 export default {
+    name: 'LogView',
+    mixins: [i18nMixin],
     props: {
         title: String,
         fileName: String
@@ -39,6 +43,7 @@ export default {
         }
     },
     methods: {
+        formatTimeFromNow,
         refresh() {
             if (this.stop) {
                 this.stop();
@@ -51,7 +56,8 @@ export default {
             });
         },
         handleDownload() {
-
+            const blob = new Blob([this.content], {type: 'text/plain;charset=utf-8'});
+            saveAs(blob, this.fileName);
         }
     },
     beforeDestroy() {
@@ -62,17 +68,30 @@ export default {
 
 
 <style lang="less" scoped>
+.log-view {
+    display: flex;
+    flex-direction: column-reverse;
+}
 .bar {
+    flex: 0 0 auto;
     height: 50px;
     display: flex;
     justify-content: space-between;
-}
-.content {
-    height: calc(100vh - 50px - 50px);
-    overflow: auto;
+    align-items: center;
+    flex-wrap: wrap-reverse;
+    border-top: 1px solid #999;
 }
 .update-time {
     color: gray;
-    font-size: 0.8em;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+.content {
+    flex: 1 1 auto;
+    overflow: auto;
+
+    pre {
+        white-space: break-spaces;
+    }
 }
 </style>

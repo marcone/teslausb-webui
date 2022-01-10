@@ -2,19 +2,22 @@
     <div class="tools">
         <p>
             <VeuiButton ui="primary" :loading="isTriggering" :disabled="disabled"
-                @click="handleTriggerButtonClick">Trigger archive/sync</VeuiButton>
+                @click="handleTriggerButtonClick">{{ t('trigger-sync') }}</VeuiButton>
         </p>
         <p>
             <VeuiButton ui="basic" :loading="isRebooting" :disabled="disabled"
-                @click="handleRebootButtonClick">Restart Raspberry Pi</VeuiButton>
+                @click="handleRebootButtonClick">{{ t('reboot-raspi') }}</VeuiButton>
         </p>
     </div>
 </template>
 
 <script>
+import i18nMixin from '../mixins/i18n';
 import {triggerArchiveSync, reboot} from '../apis/device';
 
 export default {
+    name: 'Tools',
+    mixins: [i18nMixin],
     data() {
         return {
             isTriggering: false,
@@ -37,13 +40,13 @@ export default {
             } finally {
                 this.isTriggering = false;
             }
-            this.$toast.success('Sync triggered');
+            this.$toast.success(this.t('trigger-success'));
         },
         async handleRebootButtonClick() {
             if (!(await this.$confirm(
-                'Are you sure you want to restart the Raspberry Pi?',
-                'Restart Raspberry Pi',
-                {okLabel: 'Restart'}
+                this.t('reboot-confirm-content'),
+                this.t('reboot-confirm-title'),
+                {okLabel: this.t('reboot-confirm-ok-label')}
             ))) {
                 return;
             }
@@ -56,7 +59,7 @@ export default {
             } finally {
                 this.isRebooting = false;
             }
-            this.$toast.success('Rebooted');
+            this.$toast.success(this.t('reboot-success'));
         }
     }
 }
@@ -64,6 +67,6 @@ export default {
 
 <style scoped>
 .tools {
-    margin: 0 16px 16px;
+    margin: 16px;
 }
 </style>

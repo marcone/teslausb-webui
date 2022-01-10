@@ -2,10 +2,6 @@ const veuiLoaderOptions = require('veui-theme-dls/veui-loader-options');
 
 const proxyTarget = process.env.PROXY_TARGET;
 
-if (!process.env.VEUI_LOCALE) {
-    process.env.VEUI_LOCALE = 'en-US';
-}
-
 module.exports = {
     devServer: {
         proxy: {

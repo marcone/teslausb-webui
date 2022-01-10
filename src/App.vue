@@ -8,28 +8,32 @@
 </template>
 
 <script>
+import i18nMixin from './mixins/i18n';
 import "veui-theme-dls/common.less";
 import Header from "./components/Header/Index.vue";
 
 const links = [
-    ["Diagnostics", "/diagnostics"],
-    ["Archiveloop log", "/log/archiveloop"],
-    ["Setup log", "/log/setup"],
-    ["Tools", "/tools"],
-    ["Recordings", "/recordings"],
-    ["Viewer", "/viewer"],
+    ["diagnostics", "/diagnostics"],
+    ["archiveloop-log", "/log/archiveloop"],
+    ["setup-log", "/log/setup"],
+    ["tools", "/tools"],
+    ["recordings", "/recordings"],
+    ["viewer", "/viewer"],
 ];
 
 export default {
-    name: "App",
+    name: "AppRoot",
     components: {
         Header,
     },
-    data() {
-        return {
-            links,
-        };
-    },
+    mixins: [i18nMixin],
+    computed: {
+        links() {
+            return links.map(([key, ...rest]) => {
+                return [this.t(key), ...rest];
+            });
+        }
+    }
 };
 </script>
 

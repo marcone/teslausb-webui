@@ -2,7 +2,7 @@ import {noop} from 'lodash';
 import {cacheBustinguURL, delay} from './common';
 
 function readFile(url, range) {
-    const headers = new headers();
+    const headers = new Headers();
     if (range) {
         headers.append('range', `bytes=${range.join('-')}`);
     }
@@ -15,7 +15,7 @@ function readFile(url, range) {
 export async function readLiveFile(url, onUpdate = noop) {
     let fullContent;
     start();
-    
+
     async function start() {
         if (onUpdate === noop) {
             return;

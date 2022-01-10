@@ -5,20 +5,29 @@
                 <VeuiIcon name="hamburger" />
             </VeuiButton>
             <h1>{{ currentTitle }}</h1>
-            <slot name="extra" :compact="true" />
+            <div>
+                <slot name="extra" :compact="true" />
+            </div>
         </div>
 
         <VeuiDrawer title="TeslaUSB" placement="left" :open.sync="openDrawer" outside-closable footless
             overlay-class="header-drawer-overlay">
-            <VeuiMenu :items="menuItems" @activate="handleMenuActivate" />
+            <VeuiMenu class="links" :items="menuItems" @activate="handleMenuActivate" />
+            <div class="locale-select">
+                <Locale />
+            </div>
         </VeuiDrawer>
     </div>
 </template>
 
 <script>
 import 'veui-theme-dls-icons/hamburger';
+import Locale from './Locale.vue';
 
 export default {
+    components: {
+        Locale,
+    },
     props: {
         items: Array
     },
@@ -55,10 +64,21 @@ export default {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #d3d9e6;
+
+    h1 {
+        margin: 0;
+        font-size: 22px;
+    }
 }
-h1 {
-    margin: 0;
-    font-size: 22px;
+
+.links {
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+.locale-select {
+    flex: 0 0 auto;
+    margin: 8px 10px 0;
 }
 </style>
 
@@ -70,6 +90,8 @@ h1 {
     .veui-dialog-content-body {
         padding: 4px;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 }
 </style>

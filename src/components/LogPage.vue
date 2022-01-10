@@ -1,36 +1,33 @@
 <template>
-    <LogView class="log-page" v-bind="current"  />
+    <LogView class="log-page" v-bind="current" />
 </template>
 
 <script>
+import i18nMixin from '../mixins/i18n';
 import LogView from './LogView';
 
 const typeMap = {
-    archiveloop: ['Archiveloop log', 'archiveloop.log'],
-    setup: ['Setup log', 'teslausb-headless-setup.log']
+    archiveloop: ['archiveloop-log', 'archiveloop.log'],
+    setup: ['setup-log', 'teslausb-headless-setup.log']
 };
 
 export default {
+    name: 'LogPage',
     components: {LogView},
-    data() {
-        return {
-            category: undefined
-        }
-    },
+    mixins: [i18nMixin],
     computed: {
         current() {
-            const [title, fileName] = typeMap[this.category];
-            return {title, fileName};
+            const {category} = this.$route.params;
+            const [titleKey, fileName] = typeMap[category];
+            return {title: this.t(titleKey), fileName};
         }
-    },
-    beforeRouteEnter(to, from, next) {
-        const {category} = to.params;
-        next(vm => {
-            vm.category = category;
-        });
-    },
-    beforeRouteUpdate(to, from, next) {
-        this.category = to.params.category;
     }
 }
 </script>
+
+<style lang="less" scoped>
+.log-page {
+    margin: 16px;
+    height: calc(100vh - 50px - 32px);
+}
+</style>

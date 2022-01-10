@@ -4,6 +4,7 @@ import confirm from 'veui/plugins/confirm';
 import toast from 'veui/plugins/toast';
 import App from './App.vue';
 import routes from './routes';
+import './locale';
 
 Vue.config.productionTip = false;
 Vue.use(confirm);

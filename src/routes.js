@@ -1,6 +1,6 @@
 import Viewer from './components/Viewer';
 import Diagnostics from './components/Diagnostics';
-import Log from './components/Log';
+import LogPage from './components/LogPage';
 import Tools from './components/Tools';
 import Recordings from './components/Recordings';
 
@@ -11,7 +11,7 @@ export default [
     },
     {
         path: '/log/:category',
-        component: Log,
+        component: LogPage,
     },
     {
         path: '/tools',

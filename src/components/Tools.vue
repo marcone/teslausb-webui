@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import {triggerArchiveSync, reboot} from '../apis';
+import {triggerArchiveSync, reboot} from '../apis/device';
 
 export default {
     data() {

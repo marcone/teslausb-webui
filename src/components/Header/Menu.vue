@@ -36,24 +36,13 @@ export default {
             return this.items.map(([label, to]) => ({label, to}));
         }
     },
-    watch: {
-        compact() {
-            this.openDrawer = false;
-        }
-    },
     methods: {
-        handleResize() {
-            this.compact = this.$el.offsetWidth < 500;
-        },
         handleMenuButtonClick() {
             this.openDrawer = true;
         },
         handleMenuActivate() {
             this.openDrawer = false;
         }
-    },
-    mounted() {
-        this.handleResize();
     }
 }
 </script>

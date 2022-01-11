@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/en';
 import 'dayjs/locale/zh-cn';
-import i18n from '../locale';
+import i18n, {prefixNs} from '../locale';
 
 dayjs.extend(relativeTime);
 
@@ -21,7 +21,7 @@ export function formatTimeFromNow(locale, t) {
 export default {
     methods: {
         t(key, data) {
-            const message = i18n.get(`TeslaUSB-${this.$options.name}.${key}`);
+            const message = i18n.get(`${prefixNs(this.$options.name)}.${key}`);
             return template(message)(data);
         },
         ft(time) {

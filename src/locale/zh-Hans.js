@@ -1,8 +1,3 @@
-import i18n from 'veui/managers/i18n';
-
-function register(ns, data) {
-    i18n.register('zh-Hans', data, {ns: 'TeslaUSB-' + ns});
-}
 
 const common = {
     'diagnostics': '诊断',
@@ -13,20 +8,20 @@ const common = {
     'viewer': '查看行车视频',
 }
 
-register('AppRoot', common);
+export const AppRoot = common;
 
-register('LogPage', common);
-register('LogView', {
+export const LogPage = common;
+export const LogView = {
     'loading': '加载中...',
     'download': '下载${title}',
-});
+};
 
-register('DiagnosticsPage', {
+export const DiagnosticsPage = {
     ...common,
     generating: '生成中...',
-});
+};
 
-register('Tools', {
+export const Tools = {
     'trigger-sync': '触发归档/同步',
     'trigger-success': '已触发',
     'reboot-raspi': '重启树莓派',
@@ -34,4 +29,15 @@ register('Tools', {
     'reboot-confirm-title': '重启树莓派',
     'reboot-confirm-ok-label': '重启',
     'reboot-success': '已重启',
-});
+};
+
+export const Viewer = {
+    layout: '布局',
+    RecentClips: '最近',
+    SavedClips: '已保存',
+    SentryClips: '哨兵',
+    'layout-1': '两侧在上（镜像）',
+    'layout-2': '两侧在下（镜像）',
+    'layout-3': '两侧在下',
+    'episode-select-placeholder': '选择片段',
+};

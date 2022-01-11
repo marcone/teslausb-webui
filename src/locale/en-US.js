@@ -1,8 +1,3 @@
-import i18n from 'veui/managers/i18n';
-
-function register(ns, data) {
-    i18n.register('en-US', data, {ns: 'TeslaUSB-' + ns});
-}
 
 const common = {
     'diagnostics': 'Diagnostics',
@@ -13,20 +8,20 @@ const common = {
     'viewer': 'Viewer',
 }
 
-register('AppRoot', common);
+export const AppRoot = common;
 
-register('LogPage', common);
-register('LogView', {
+export const LogPage = common;
+export const LogView = {
     'loading': 'Loading...',
     'download': 'Download ${title}',
-});
+};
 
-register('DiagnosticsPage', {
+export const DiagnosticsPage = {
     ...common,
     generating: 'Generating...',
-});
+};
 
-register('Tools', {
+export const Tools = {
     'trigger-sync': 'Trigger archive/sync',
     'trigger-success': 'Sync triggered',
     'reboot-raspi': 'Restart Raspberry Pi',
@@ -34,4 +29,15 @@ register('Tools', {
     'reboot-confirm-title': 'Restart Raspberry Pi',
     'reboot-confirm-ok-label': 'Restart',
     'reboot-success': 'Rebooted',
-});
+};
+
+export const Viewer = {
+    layout: 'Layout',
+    RecentClips: 'RecentClips',
+    SavedClips: 'SavedClips',
+    SentryClips: 'SentryClips',
+    'layout-1': 'Sides on top, rear on bottom, mirrored',
+    'layout-2': 'Side and rear on bottom, mirrored',
+    'layout-3': 'Side and rear on bottom, looking back',
+    'episode-select-placeholder': 'Select an episode',
+};

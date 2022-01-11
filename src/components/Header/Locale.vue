@@ -2,12 +2,12 @@
     <span :class="{compact}">
         <VeuiButton v-if="compact" ui="text xl" @click="handleLocaleClick">{{shortLabel}}</VeuiButton>
         <VeuiSelect class="locale-select" :options="availableLocales" :value="currentLocale"
-            :expanded.sync="localeExpanded" @change="handleLocaleChange" />
+            :expanded.sync="localeExpanded" @change="setLocale" />
     </span>
 </template>
 
 <script>
-import i18n, {availableLocales} from '@/locale';
+import i18n, {setLocale, availableLocales} from '@/locale';
 
 export default {
     props: {
@@ -28,16 +28,9 @@ export default {
         }
     },
     methods: {
+        setLocale,
         handleLocaleClick() {
             this.localeExpanded = true;
-        },
-        handleLocaleChange(val) {
-            i18n.locale = val;
-
-            const {pathname, search, hash} = location;
-            const query = new URLSearchParams(search);
-            query.set('locale', val);
-            history.replaceState(null, '', `${pathname}?${query.toString()}${hash}`);
         }
     }
 }

@@ -9,37 +9,44 @@
 </template>
 
 <script>
+import {tooltip} from 'veui';
 import {getVideoList} from '@/apis/video';
+import i18nMixin from '../../mixins/i18n';
 import Player from './Player.vue';
 import BingMap from './BingMap.vue';
 import EpisodeSelect from './EpisodeSelect.vue';
 
-const layouts = [
-    {value: '1', label: '1'},
-    {value: '2', label: '2'},
-];
-
 export default {
     name: "Viewer",
+    mixins: [i18nMixin],
+    provide() {
+        return {
+            t: this.t,
+        }
+    },
+    directives: {tooltip},
     components: {Player, BingMap, EpisodeSelect},
     data() {
         return {
             loading: true,
             videos: [],
-            layouts,
-            layout: layouts[0].value,
-            current: 1,
+            layout: '1',
+            current: undefined,
         };
     },
     computed: {
+        layouts() {
+            return ['1', '2', '3'].map(value => ({value, label: this.t(`layout-${value}`)}));
+        },
         currentVideo() {
-
+            const [group, seq] = this.current;
+            return this.videos[group][seq];
         }
     },
     async mounted() {
         try {
             this.videos = await getVideoList();
-            // this.current = this.videos[0];
+            // this.current = getCurrent(this.videos);
             this.loading = false;
         }
         catch (err) {
@@ -47,6 +54,13 @@ export default {
         }
     }
 };
+
+function getCurrent(videos) {
+    const groups = Object.keys(videos);
+    const group = groups.find(group => Object.keys(videos[group]).length);
+    const seq = Object.keys(videos[group])[0];
+    return [group, seq];
+}
 </script>
 
 <style lang="less" scoped>
@@ -62,11 +76,8 @@ export default {
         flex: 0 0 auto;
     }
 }
-.episode-select {
-    width: 200px;
-}
 .layout-select {
-    width: 100px;
+    width: auto;
 }
 
 .video {

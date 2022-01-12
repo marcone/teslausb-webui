@@ -1,35 +1,49 @@
 <template>
     <div>
-        <VeuiSelect class="select" searchable :value="value" :options="nestedOptions"
-            :placeholder="t('episode-select-placeholder')" @change="handleCurrentChange">
-            <template #label>
-                <VeuiBreadcrumb :routes="currentBreadcrumb" />
-            </template>
-            <template #option-label="{matches, label, data}">
-                <span v-tooltip="getPopupProps(data)">
-                    <template v-if="matches">
-                        <template v-for="({text, matched}, i) in matches[0].parts">
-                            <component :is="matched ? 'mark' : 'span'" :key="i"
-                                :class="{'veui-option-matched': matched}">{{text}}</component>
+        <VeuiConfigProvider :value="{'overlay.overlayClass': 'viewer-episode-select'}">
+            <VeuiSelect class="select" searchable :value="value" :options="nestedOptions"
+                :placeholder="t('episode-select-placeholder')" @change="handleCurrentChange">
+                <template #label>
+                    <VeuiBreadcrumb :routes="currentBreadcrumb" />
+                </template>
+                <template #option="{matches, label, data}">
+                    <span @mouseenter="showTooltip($event, data)" @mouseleave="showTooltip()">
+                        <template v-if="matches">
+                            <VeuiBreadcrumb class="option-label-content">
+                                <template v-for="({parts}, i) in matches">
+                                    <VeuiBreadcrumbItem :key="i">
+                                        <template v-for="({text, matched}, j) in parts">
+                                            <component :is="matched ? 'mark' : 'span'" :key="j"
+                                                :class="{'veui-option-matched': matched}">{{text}}</component>
+                                        </template>
+                                    </VeuiBreadcrumbItem>
+                                </template>
+                            </VeuiBreadcrumb>
                         </template>
-                    </template>
-                    <template v-else>{{ label }}</template>
-                </span>
-            </template>
-        </VeuiSelect>
+                        <template v-else>{{ label }}</template>
+                    </span>
+                </template>
+            </VeuiSelect>
+        </VeuiConfigProvider>
+        <VeuiTooltip v-if="currentTooltip" open :target="currentTooltip[0]" position="right">
+            <img class="viewer-episode-select-popup-thumb" :src="currentTooltip[1]" />
+        </VeuiTooltip>
     </div>
 </template>
 
 <script>
-import {tooltip} from 'veui';
 import {getVideoURL} from '@/apis/video';
 
 export default {
-    directives: {tooltip},
     inject: ['compact', 't'],
     props: {
-        value: String,
-        videos: Array
+        value: Array,
+        videos: Object
+    },
+    data() {
+        return {
+            currentTooltip: undefined,
+        }
     },
     computed: {
         nestedOptions() {
@@ -38,60 +52,70 @@ export default {
                 trigger: 'hover',
                 position: 'popup',
                 options: convertSequences(sequences, groupName)
-            })).map(options => ({options}));
+            }));
 
             function convertSequences(sequences, groupName) {
-                const dateGroup = Object.entries(sequences).reduce((dateGroup, [sequenceName, data]) => {
-                    const [key, name] = parseSequenceName(sequenceName);
-                    if (!dateGroup[key]) {
-                        dateGroup[key] = [];
-                    }
-                    dateGroup[key].push({
-                        label: name,
-                        value: [groupName, sequenceName],
-                        data: {...data, group: groupName, sequence: sequenceName}
+                return Object.entries(sequences).map(function ([date, times]) {
+                    const options = Object.entries(times).map(function ([time, data]) {
+                        return {
+                            label: time,
+                            value: [groupName, date, time],
+                            data,
+                        };
                     });
-                    return dateGroup;
-                }, {});
-                return Object.entries(dateGroup).map(([key, options]) => ({
-                    label: key,
-                    position: 'inline',
-                    options
-                }));
+                    return {label: date, position: 'inline', options};
+                });
             }
         },
         currentBreadcrumb() {
-            const [group, seq] = this.value;
-            const {key} = this.videos[group][seq];
-            return [group, ...(key.split('_'))].map(label => ({label}));
+            const [group, date, time] = this.value;
+            return [this.t(group), date, time].map(label => ({label}));
         }
     },
     methods: {
         handleCurrentChange(value) {
             this.$emit('input', value);
         },
-        getPopupProps({group, sequence, thumb}) {
+        showTooltip(event, data) {
+            if (!data) {
+                this.currentTooltip = undefined;
+                return;
+            }
+            const {group, sequence, thumb} = data;
             const url = getVideoURL(group, sequence, thumb);
-            return {
-                content: <img className="popup-thumb" src={url} />,
-                position: 'right',
-                disabled: !thumb
-            };
+            this.currentTooltip = [event.target, url];
         }
     }
-}
-
-function parseSequenceName(name) {
-    return [name.substring(0, 14), name.substring(15, 19)];
 }
 </script>
 
 <style lang="less" scoped>
-.popup-thumb {
-    display: block;
-    width: 300px;
+.option-label-content {
+    position: relative;
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+    }
 }
-.select {
-    width: auto;
+</style>
+
+<style lang="less">
+.viewer-episode-select {
+    --dls-dropdown-max-display-items: 12;
+
+    .veui-option-group-options {
+        padding-top: 0;
+        margin-top: 4px;
+    }
+    .veui-option-group-label {
+        position: sticky;
+        top: 0;
+        background: white;
+    }
+}
+.viewer-episode-select-popup-thumb {
+    display: block;
+    max-width: 300px;
 }
 </style>

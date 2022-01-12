@@ -47,5 +47,10 @@ export default {
 .diagnostics {
     margin: 16px 16px 0;
     height: calc(100vh - 50px - 20px);
+
+    /deep/ .log-view .content {
+        margin: -1em -1em 0;
+        padding: 1em;
+    }
 }
 </style>

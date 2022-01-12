@@ -1,7 +1,8 @@
 <template>
     <div class="viewer">
         <div class="selects">
-            <EpisodeSelect class="episode-select" v-model="current" :videos="videos" />
+            <VeuiLoading v-if="!videos" loading />
+            <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
         </div>
         <Player class="video" v-if="current" :video="currentVideo" :layout="layout" />
@@ -28,8 +29,7 @@ export default {
     components: {Player, BingMap, EpisodeSelect},
     data() {
         return {
-            loading: true,
-            videos: [],
+            videos: null,
             layout: '1',
             current: undefined,
         };
@@ -39,27 +39,31 @@ export default {
             return ['1', '2', '3'].map(value => ({value, label: this.t(`layout-${value}`)}));
         },
         currentVideo() {
-            const [group, seq] = this.current;
-            return this.videos[group][seq];
+            const [group, date, time] = this.current;
+            return this.videos[group][date][time];
         }
     },
     async mounted() {
-        try {
-            this.videos = await getVideoList();
-            // this.current = getCurrent(this.videos);
-            this.loading = false;
-        }
-        catch (err) {
-            this.$alert.error(err.message);
-        }
+        const load = async () => {
+            try {
+                this.videos = await getVideoList();
+                // this.current = getCurrent(this.videos);
+            }
+            catch (err) {
+                await this.$alert.error(err.message, 'Can not load videos');
+                load();
+            }
+        };
+
+        load();
     }
 };
 
 function getCurrent(videos) {
-    const groups = Object.keys(videos);
-    const group = groups.find(group => Object.keys(videos[group]).length);
-    const seq = Object.keys(videos[group])[0];
-    return [group, seq];
+    const group = Object.keys(videos)[0];
+    const date = Object.keys(videos[group])[0];
+    const time = Object.keys(videos[group][date])[0];
+    return [group, date, time];
 }
 </script>
 
@@ -71,8 +75,10 @@ function getCurrent(videos) {
 .selects {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap-reverse;
 
     > div {
+        margin-bottom: 10px;
         flex: 0 0 auto;
     }
 }

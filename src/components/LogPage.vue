@@ -29,5 +29,10 @@ export default {
 .log-page {
     margin: 16px 16px 0;
     height: calc(100vh - 50px - 20px);
+
+    /deep/ .content {
+        margin: -1em -1em 0;
+        padding: 1em;
+    }
 }
 </style>

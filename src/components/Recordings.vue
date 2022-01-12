@@ -3,7 +3,7 @@
         <div class="loading" v-if="loading">
             <VeuiLoading loading ui="vertical l strong" />
         </div>
-        <iframe src="TeslaCam/" @load="loading = false"></iframe>
+        <iframe src="/TeslaCam/" @load="loading = false"></iframe>
     </div>
 </template>
 

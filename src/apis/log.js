@@ -13,6 +13,7 @@ function readFile(url, range) {
 }
 
 export function readLiveFile(url, onUpdate = noop) {
+    let prevNextOffset = 0;
     let fullContent;
     start();
 
@@ -27,15 +28,17 @@ export function readLiveFile(url, onUpdate = noop) {
     }
 
     async function next(offset) {
-        if (onUpdate === noop) {
+        if (onUpdate === noop || prevNextOffset === offset) {
             return;
         }
+        prevNextOffset = offset;
+        
         const response = await readFile(url, [offset - 1, offset + 32768]);
         if (response.status === 206) {
             const content = await response.text();
             fullContent += content.substring(1);
             onUpdate(fullContent);
-            await delay(1000);
+            await delay(300);
             next(fullContent.length);
         }
         else if (response.status === 416) {
@@ -44,7 +47,7 @@ export function readLiveFile(url, onUpdate = noop) {
                 const [full, content] = res;
                 fullContent = full;
                 onUpdate(fullContent);
-                await delay(1000);
+                await delay(500);
                 next(content.length);
             }
             else {

@@ -7,6 +7,7 @@
                     {{ t('download', {title}) }}
                 </VeuiButton>
             </div>
+            <!-- todo: live time -->
             <div class="update-time">{{ ft(updateTime) }}</div>
         </div>
         <div class="content">
@@ -49,7 +50,7 @@ export default {
                 this.content = undefined;
                 this.updateTime = undefined;
             }
-            this.stop = readLiveFile(this.fileName, content => {
+            this.stop = readLiveFile('/' + this.fileName, content => {
                 this.content = content;
                 this.updateTime = new Date();
             });
@@ -70,6 +71,7 @@ export default {
 .log-view {
     display: flex;
     flex-direction: column-reverse;
+    height: 100%;
 }
 .bar {
     flex: 0 0 auto;
@@ -87,9 +89,11 @@ export default {
 }
 .content {
     flex: 1 1 auto;
-    overflow: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
 
     pre {
+        margin: 0;
         white-space: break-spaces;
     }
 }

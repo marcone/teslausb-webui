@@ -5,7 +5,7 @@
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
         </div>
-        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" />
+        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" :key="currentVideo.date" />
     </div>
 </template>
 

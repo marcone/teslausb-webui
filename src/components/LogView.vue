@@ -7,8 +7,9 @@
                     {{ t('download', {title}) }}
                 </VeuiButton>
             </div>
-            <!-- todo: live time -->
-            <div class="update-time">{{ ft(updateTime) }}</div>
+            <div class="update-time">
+                <LiveTime relative :time="updateTime" />
+            </div>
         </div>
         <div class="content">
             <VeuiLoading :loading="!content">{{ t('loading') }}</VeuiLoading>
@@ -21,10 +22,12 @@
 import {saveAs} from 'file-saver';
 import i18nMixin from '../mixins/i18n';
 import {readLiveFile} from '../apis/log';
+import LiveTime from './Time.vue';
 
 export default {
     name: 'LogView',
     mixins: [i18nMixin],
+    components: {LiveTime},
     props: {
         title: String,
         fileName: String

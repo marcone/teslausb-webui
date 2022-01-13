@@ -1,90 +1,125 @@
 <template>
     <div class="player" :class="{loading: !videoInfo}">
-        <template v-if="videoInfo">
-            <div class="picture" :class="`layout-${layout}`" ref="picture">
-                <div :class="pos" v-for="pos in positions" :key="pos">
-                    <video muted v-bind="videoProps[pos]"></video>
-                </div>
-                <div class="map">map</div>
-                <div class="meta">meta</div>
-            </div>
+        <VeuiLoading v-if="!videoInfo" loading />
+        <VeuiAlert v-if="(videoInfo instanceof Error)" type="error" title="Fetch video fail">
+            {{ videoInfo.message }}
+        </VeuiAlert>
+        <template v-else>
+            <Videos ref="video" :video="combinedVideo" :playbackRate="playbackRate" :layout="layout"
+                @timeupdate="currentTime = $event"
+                @bufferProgress="bufferedProgress = $event">
+                <template #map v-if="currentLocation">
+                    <BingMap :coordinate="currentLocation" />
+                </template>
+            </Videos>
             <div class="controls">
-                <VeuiButton class="play-button" ui="text" @click="isPlaying ? pause : play" :disabled="isBuffering">
+                <VeuiButton class="play-button" ui="text" @click="isPlaying ? pause : play">
                     {{ isPlaying ? '⏸' : '▶️' }}
                 </VeuiButton>
-                <VeuiSlider class="progress" :value="currentTotalTime / videoInfo.duraiton" @input="handleProgressChange" />
+                <VeuiSlider class="progress"
+                    :value="currentTime / videoInfo.totalDuration"
+                    :secondary-progress="bufferedProgress"
+                    @input="debouncedChangeCurrentTime"
+                >
+                    <template #tip-label>{{ formatDuration(currentTime) }}</template>
+                </VeuiSlider>
                 <div class="time">
-                    00:00/00:00
+                    {{ formatDuration(currentTime) }} / {{ formatDuration(videoInfo.totalDuration) }}
                 </div>
             </div>
         </template>
-        <VeuiLoading v-else loading />
     </div>
 </template>
 
 <script>
+import dayjs from 'dayjs';
+import {last} from 'lodash';
 import {getVideoURL, getVideoInfo} from '@/apis/video';
-
-const positions = ['front', 'back', 'left', 'right'];
+import BingMap from './BingMap.vue';
 
 export default {
+    components: {BingMap},
     props: {
         layout: String,
         video: Object
     },
     data() {
         return {
-            positions,
             videoInfo: null,
-
             playbackRate: 1,
-            currentClipIndex: 0,
-            currentClipTime: 0,
             isPlaying: false,
-            isBuffering: false
+            currentTime: 0,
+            bufferedProgress: 0
         };
     },
     computed: {
-        currentClip() {
-            return this.video.clips[this.currentClipIndex];
+        currentLocation() {
+            return; // todo
+            if (!this.videoInfo.json) {
+                return;
+            }
+            const {latitude, longitude} = this.videoInfo.json.location;
+            return [latitude, longitude];
         },
-        currentTotalTime() {
-            return this.video.clips.slice(0, this.currentClipIndex)
-                .reduce((total, clip) => total + clip.duration, 0) + this.currentClipTime;
+        debouncedChangeCurrentTime() {
+            return debounce(this.changeCurrentTime, 300);
         },
-        videoProps() {
-            const {group, sequence} = this.video;
-            return positions.reduce((ret, key) => {
-                const filename = this.currentClip[key];
-                ret[key] = {
-                    src: getVideoURL(group, sequence, filename),
-                    width: this.videoInfo.width,
-                    height: this.videoInfo.height,
-                };
-                return ret;
-            }, {});
+        combinedVideo() {
+            return {
+                ...this.video,
+                width: this.videoInfo.width,
+                height: this.videoInfo.height,
+                duration: this.videoInfo.totalDuration,
+            }
         }
     },
     watch: {
-        video(video) {
-            // TODO: get total duraiton: (n - 1) * 60 + last.duration
-            // TODO: read json if exists
-            // this.videoInfo = {};
+        video: {
+            immediate: true,
+            async handler(video) {
+                // In prarent component, this component is associated with a unique key
+                // once selected video changes, this component is destroyed and re-created
+                // So here we can ignore the async callback race condition for all states are brand-new every time
+                try {
+                    this.videoInfo = null;
+                    this.videoInfo = await Promise.race([this.fetchVideoInfo(video), cancelPromise]);
+                } catch (err) {
+                    this.videoInfo = err;
+                }
+            }
         }
     },
     methods: {
-        seekTo(time) {
-
-        },
         play() {
-
+            this.isPlaying = true;
+            this.$refs.video.play();
         },
         pause() {
-
+            this.$refs.video.pause();
+            this.isPlaying = false;
         },
-        handleProgressChange(val) {
-            seekTo(val * this.videoInfo.duration);
-        }
+
+        changeCurrentTime(val) {
+            seekTo(val * this.videoInfo.totalDuration);
+        },
+        formatDuration(t) {
+            return dayjs.duration(t * 1000).format(t < 3600 ? 'mm:ss' : 'HH:mm:ss');
+        },
+
+        async fetchVideoInfo(video) {
+            const {[primaryPos]: mp4Filename, jsonfile: jsonFilename} = last(video.clips);
+            const videoSrc = getVideoURL(video.group, video.sequence, mp4Filename);
+            const {width, height, duration: lastDuration} = await getVideoInfo(videoSrc);
+            const totalDuration = SEGMENT_DURATION * (video.clips.length - 1) + lastDuration
+            const info = {width, height, lastDuration, totalDuration};
+
+            if (jsonFilename) {
+                const jsonUrl = getVideoURL(video.group, video.sequence, jsonFilename);
+                info.json = await fetch(jsonUrl).then(res => res.json());
+            }
+
+            return info;
+        },
     }
 }
 </script>
@@ -99,48 +134,6 @@ export default {
     }
 }
 
-.picture {
-    background: black;
-    color: white;
-
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-
-    > div {
-        aspect-ratio: 4 / 3;
-    }
-
-    video {
-        display: block;
-        width: 100%;
-        height: 100%;
-    }
-
-    &.layout-1 {
-        .left {order: 0; transform: rotateY(180deg);}
-        .front {order: 1}
-        .right {order: 2; transform: rotateY(180deg);}
-        .map {order: 3}
-        .back {order: 4; transform: rotateY(180deg);}
-        .meta {order: 5}
-    }
-    &.layout-2 {
-        .map {order: 0}
-        .front {order: 1}
-        .meta {order: 2}
-        .left {order: 3; transform: rotateY(180deg);}
-        .back {order: 4; transform: rotateY(180deg);}
-        .right {order: 5; transform: rotateY(180deg);}
-    }
-    &.layout-3 {
-        .map {order: 0}
-        .front {order: 1}
-        .meta {order: 2}
-        .right {order: 3;}
-        .back {order: 4}
-        .left {order: 5;}
-    }
-}
 .controls {
     display: flex;
     align-items: center;
@@ -151,7 +144,7 @@ export default {
     }
     .progress {
         flex: 1 1 auto;
-        margin: 0 1em;
+        margin: 0 1.5em;
     }
     .time {
         flex: 0 0 auto;

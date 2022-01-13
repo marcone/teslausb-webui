@@ -8,6 +8,11 @@ async function before(app, server, compiler) {
         res.setHeader('Content-Type', 'text/plain');
         res.sendFile(path.resolve(__dirname, 'mock/videolist.txt'));
     });
+    app.get('/TeslaCam/a/b/:file', function (req, res) {
+        console.log(req.params.file);
+        res.setHeader('Content-Type', 'video/mp4');
+        res.sendFile(path.resolve(__dirname, 'mock/videos', req.params.file));
+    });
 }
 
 module.exports = {

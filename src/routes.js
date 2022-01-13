@@ -3,8 +3,9 @@ import Diagnostics from './components/Diagnostics';
 import LogPage from './components/LogPage';
 import Tools from './components/Tools';
 import Recordings from './components/Recordings';
+import Debug from './components/Debug';
 
-export default [
+const routes = [
     {
         path: '/diagnostics',
         component: Diagnostics,
@@ -25,4 +26,13 @@ export default [
         path: '/viewer',
         component: Viewer,
     },
-]
+];
+
+if (process.env.NODE_ENV === 'development') {
+    routes.push({
+        path: '/debug',
+        component: Debug,
+    });
+}
+
+export default routes;

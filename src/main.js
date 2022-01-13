@@ -1,8 +1,16 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+
 import confirm from 'veui/plugins/confirm';
 import toast from 'veui/plugins/toast';
 import alert from 'veui/plugins/alert';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import duration from 'dayjs/plugin/duration';
+import 'dayjs/locale/en';
+import 'dayjs/locale/zh-cn';
+
 import App from './App.vue';
 import routes from './routes';
 import './locale';
@@ -12,6 +20,9 @@ Vue.use(confirm);
 Vue.use(toast);
 Vue.use(alert);
 Vue.use(VueRouter);
+
+dayjs.extend(relativeTime);
+dayjs.extend(duration);
 
 const router = new VueRouter({ routes });
 router.beforeEach(function (to, from, next) {

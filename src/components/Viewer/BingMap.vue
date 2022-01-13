@@ -21,7 +21,7 @@ export default {
         resize
     },
     props: {
-        coordinate: Array
+        coordinate: Array // lat, lon
     },
     data() {
         return {

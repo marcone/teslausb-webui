@@ -17,13 +17,19 @@ async function before(app, server, compiler) {
 
 module.exports = {
     devServer: {
-        before,
+        // https://v4.webpack.js.org/configuration/dev-server/#devserverbefore
+        // before,
         proxy: {
             '/*.txt': { target: proxyTarget },
             '/*.log': { target: proxyTarget },
             '/cgi-bin/': { target: proxyTarget },
             '/TeslaCam/': { target: proxyTarget }
-        }
+        },
+        // disableHostCheck: true,
+        // host: '0.0.0.0',
+        // port: '8001',
+        // https: false,
+        // public: '192.168.2.100:8001'
     },
     css: {
         loaderOptions: {

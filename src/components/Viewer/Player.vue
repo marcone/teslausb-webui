@@ -17,6 +17,10 @@
                 <template #map v-if="currentLocation">
                     <BingMap :coordinate="currentLocation" />
                 </template>
+                <template #meta v-if="videoInfo.json">
+                    <div>{{ videoInfo.json.city }}</div>
+                    <div>{{ t(videoInfo.json.reason) }}</div>
+                </template>
             </Videos>
             <div class="controls">
                 <VeuiButton class="play-button" ui="icon l" @click="isPlaying ? pause() : play()">
@@ -52,7 +56,7 @@ import 'veui-theme-dls-icons/play';
 import 'veui-theme-dls-icons/pause';
 import {getVideoURL, getVideoInfo} from '@/apis/video';
 import BingMap from './BingMap.vue';
-import {primaryPos} from './common';
+import {primaryPos, SEGMENT_DURATION} from './common';
 import Dropdown from '../Dropdown.vue';
 import Slider from './Slider.vue';
 
@@ -77,12 +81,11 @@ export default {
     },
     computed: {
         currentLocation() {
-            return; // todo
             if (!this.videoInfo.json) {
                 return;
             }
-            const {latitude, longitude} = this.videoInfo.json.location;
-            return [latitude, longitude];
+            const {est_lat, est_lon} = this.videoInfo.json;
+            return [est_lat, est_lon];
         },
         combinedVideo() {
             return {
@@ -127,7 +130,8 @@ export default {
             // return {
             //     totalDuration: combinedVideo.duration,
             // };
-            const {[primaryPos]: mp4Filename, jsonfile: jsonFilename} = last(video.clips);
+            const {jsonfile: jsonFilename} = video;
+            const {[primaryPos]: mp4Filename} = last(video.clips);
             const videoSrc = getVideoURL(video.group, video.sequence, mp4Filename);
             const {width, height, duration: lastDuration} = await getVideoInfo(videoSrc);
             const totalDuration = SEGMENT_DURATION * (video.clips.length - 1) + lastDuration

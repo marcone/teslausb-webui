@@ -49,8 +49,8 @@ export default {
         isActive(val) {
             return this.value === val;
         },
-        getThumbSrc({group, label, thumb}) {
-            return getVideoURL(group, label, thumb);
+        getThumbSrc({group, sequence, thumb}) {
+            return getVideoURL(group, sequence, thumb);
         }
     }
 }

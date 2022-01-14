@@ -54,7 +54,7 @@ export default {
                 label: this.t(groupName),
                 trigger: 'hover',
                 position: 'popup',
-                options: convertSequences(sequences, groupName)
+                options: convertSequences(sequences, groupName).reverse()
             }));
 
             function convertSequences(sequences, groupName) {

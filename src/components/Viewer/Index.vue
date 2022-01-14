@@ -1,11 +1,12 @@
 <template>
-    <div class="viewer" :class="{compact}">
+    <div class="viewer" :class="{compact: env.compact}">
         <div class="selects">
             <VeuiLoading v-if="!videos" loading>{{ t('fetching-video-list') }}</VeuiLoading>
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
         </div>
-        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" />
+        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" 
+            :key="currentVideo.date.getTime()" />
     </div>
 </template>
 
@@ -20,6 +21,7 @@ import EpisodeSelect from './EpisodeSelect/Index.vue';
 export default {
     name: "Viewer",
     mixins: [i18nMixin],
+    inject: ['env'],
     provide() {
         return {
             t: this.t,
@@ -30,7 +32,7 @@ export default {
     data() {
         return {
             videos: null,
-            layout: '4',
+            layout: '1',
             current: null,
         };
     },
@@ -73,7 +75,7 @@ function getCurrent(videos) {
     position: relative;
 
     &.compact /deep/ .picture {
-        font-size: 6px;
+        font-size: 8px;
     }
 }
 .selects {

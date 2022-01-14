@@ -12,7 +12,8 @@
                 <slot name="map" />
             </div>
             <div class="meta">
-                <Time :time="currentDate" />
+                <div><Time :time="currentDate" /></div>
+                <slot name="meta"></slot>
             </div>
         </div>
         <div v-if="isWaitting" class="loading">
@@ -259,7 +260,7 @@ function onceEvent(el, event) {
 }
 
 .meta {
-    padding: 1em;
-    font-size: 2em;
+    padding: 0.5em;
+    font-size: 1.4em;
 }
 </style>

@@ -47,4 +47,5 @@ export const Viewer = {
     'fetching-video-detail': '加载视频详情...',
     'fetch-video-detail-error': '加载视频详情失败',
     'detect-video-error': '无法识别视频',
+    'user_interaction_dashcam_icon_tapped': '点击了行车记录仪图标'
 };

@@ -2,50 +2,53 @@
     <div>
         <VeuiConfigProvider :value="{'overlay.overlayClass': 'viewer-episode-select'}">
             <VeuiSelect class="select" searchable :value="value" :options="nestedOptions"
+                :expanded.sync="expanded" @toggle="handleSelectToggle"
                 :placeholder="t('episode-select-placeholder')" @change="handleCurrentChange">
                 <template #label>
-                    <VeuiBreadcrumb :routes="currentBreadcrumb" />
+                    <SimpleBreadcrumb :items="currentBreadcrumb" />
                 </template>
                 <template #option="{matches, label, data}">
                     <span @mouseenter="showTooltip($event, data)" @mouseleave="showTooltip()">
-                        <template v-if="matches">
-                            <VeuiBreadcrumb class="option-label-content">
-                                <template v-for="({parts}, i) in matches">
-                                    <VeuiBreadcrumbItem :key="i">
-                                        <template v-for="({text, matched}, j) in parts">
-                                            <component :is="matched ? 'mark' : 'span'" :key="j"
-                                                :class="{'veui-option-matched': matched}">{{text}}</component>
-                                        </template>
-                                    </VeuiBreadcrumbItem>
-                                </template>
-                            </VeuiBreadcrumb>
-                        </template>
+                        <SimpleBreadcrumb v-if="matches" :items="matches" highlight />
                         <template v-else>{{ label }}</template>
                     </span>
                 </template>
             </VeuiSelect>
         </VeuiConfigProvider>
-        <VeuiTooltip v-if="currentTooltip" open :target="currentTooltip[0]" position="right">
-            <img class="viewer-episode-select-popup-thumb" :src="currentTooltip[1]" />
+        <VeuiTooltip v-if="!compact && currentTooltip" :open="expanded" :target="currentTooltip.target" position="right">
+            <img class="viewer-episode-select-popup-thumb" :src="currentTooltip.imgSrc" />
         </VeuiTooltip>
+
+        <VeuiDialog v-if="compact" :open.sync="compactExpanded"
+            overlay-class="viewer-compact-episode-select-overlay"
+            :title="t('episode-select-placeholder')" footless ui="fullscreen">
+            <Collection :value="value" :options="nestedOptions" @change="handleCurrentChange" />
+        </VeuiDialog>
     </div>
 </template>
 
 <script>
 import {getVideoURL} from '@/apis/video';
+import Collection from './Collection.vue';
 
 export default {
-    inject: ['compact', 't'],
+    components: {Collection},
+    inject: ['env', 't'],
     props: {
-        value: Array,
+        value: String,
         videos: Object
     },
     data() {
         return {
+            expanded: false,
+            compactExpanded: false,
             currentTooltip: undefined,
         }
     },
     computed: {
+        compact() {
+            return this.env.compact;
+        },
         nestedOptions() {
             return Object.entries(this.videos).map(([groupName, sequences]) => ({
                 label: this.t(groupName),
@@ -59,7 +62,7 @@ export default {
                     const options = Object.entries(times).map(function ([time, data]) {
                         return {
                             label: time,
-                            value: [groupName, date, time],
+                            value: [groupName, date, time].join('$'),
                             data,
                         };
                     });
@@ -68,12 +71,15 @@ export default {
             }
         },
         currentBreadcrumb() {
-            const [group, date, time] = this.value;
-            return [this.t(group), date, time].map(label => ({label}));
+            const [group, date, time] = this.value.split('$');
+            return [this.t(group), date, time];
         }
     },
     methods: {
         handleCurrentChange(value) {
+            if (this.compact) {
+                this.compactExpanded = false;
+            }
             this.$emit('input', value);
         },
         showTooltip(event, data) {
@@ -82,23 +88,22 @@ export default {
                 return;
             }
             const {group, sequence, thumb} = data;
-            const url = getVideoURL(group, sequence, thumb);
-            this.currentTooltip = [event.target, url];
+            const imgSrc = getVideoURL(group, sequence, thumb);
+            this.currentTooltip = thumb && {target: event.target, imgSrc};
+        },
+
+        handleSelectToggle(expanded) {
+            if (!expanded || !this.compact) {
+                return;
+            }
+
+            this.expanded = false;
+            this.compactExpanded = true;
         }
     }
 }
 </script>
 
-<style lang="less" scoped>
-.option-label-content {
-    position: relative;
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-    }
-}
-</style>
 
 <style lang="less">
 .viewer-episode-select {
@@ -116,6 +121,12 @@ export default {
 }
 .viewer-episode-select-popup-thumb {
     display: block;
-    max-width: 300px;
+    max-width: 500px;
+}
+
+.viewer-compact-episode-select-overlay {
+    .veui-dialog-content-body {
+        padding-top: 0;
+    }
 }
 </style>

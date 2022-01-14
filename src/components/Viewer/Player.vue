@@ -1,28 +1,42 @@
 <template>
     <div class="player" :class="{loading: !videoInfo}">
-        <VeuiLoading v-if="!videoInfo" loading />
-        <VeuiAlert v-if="(videoInfo instanceof Error)" type="error" title="Fetch video fail">
-            {{ videoInfo.message }}
+        <VeuiLoading v-if="!videoInfo" loading>{{t('fetching-video-detail')}}</VeuiLoading>
+        <VeuiAlert v-else-if="isError(videoInfo)" type="error" :title="t('fetch-video-detail-error')">
+            {{ t(videoInfo.message) || videoInfo.message }}
         </VeuiAlert>
         <template v-else>
-            <Videos ref="video" :video="combinedVideo" :playbackRate="playbackRate" :layout="layout"
+            <Videos ref="video"
+                :video="combinedVideo"
+                :playbackRate="playbackRate"
+                :layout="layout"
                 @timeupdate="currentTime = $event"
-                @bufferProgress="bufferedProgress = $event">
+                @bufferProgress="bufferedProgress = $event"
+                @play="isPlaying = true"
+                @pause="isPlaying = false"
+            >
                 <template #map v-if="currentLocation">
                     <BingMap :coordinate="currentLocation" />
                 </template>
             </Videos>
             <div class="controls">
-                <VeuiButton class="play-button" ui="text" @click="isPlaying ? pause : play">
-                    {{ isPlaying ? '⏸' : '▶️' }}
+                <VeuiButton class="play-button" ui="icon l" @click="isPlaying ? pause() : play()">
+                    <template v-if="isPlaying">
+                        <VeuiIcon name="pause" />
+                    </template>
+                    <template v-else>
+                        <VeuiIcon name="play" />
+                    </template>
                 </VeuiButton>
-                <VeuiSlider class="progress"
+                <Slider class="progress"
                     :value="currentTime / videoInfo.totalDuration"
                     :secondary-progress="bufferedProgress"
-                    @input="debouncedChangeCurrentTime"
+                    @change="changeCurrentTime"
                 >
-                    <template #tip-label>{{ formatDuration(currentTime) }}</template>
-                </VeuiSlider>
+                    <template v-slot="{value}">{{ formatDuration(value * videoInfo.totalDuration) }}</template>
+                </Slider>
+                <Dropdown ui="basic xs" v-model="playbackRate" :options="playbackRates">
+                    <template v-slot="{label}"><strong>{{label}}</strong></template>
+                </Dropdown>
                 <div class="time">
                     {{ formatDuration(currentTime) }} / {{ formatDuration(videoInfo.totalDuration) }}
                 </div>
@@ -34,11 +48,19 @@
 <script>
 import dayjs from 'dayjs';
 import {last} from 'lodash';
+import 'veui-theme-dls-icons/play';
+import 'veui-theme-dls-icons/pause';
 import {getVideoURL, getVideoInfo} from '@/apis/video';
 import BingMap from './BingMap.vue';
+import {primaryPos} from './common';
+import Dropdown from '../Dropdown.vue';
+import Slider from './Slider.vue';
+
+const playbackRates = [0.5, 1, 1.25, 1.5, 2, 4].map(value => ({value, label: `${value}x`}));
 
 export default {
-    components: {BingMap},
+    inject: ['t'],
+    components: {BingMap, Dropdown, Slider},
     props: {
         layout: String,
         video: Object
@@ -46,6 +68,7 @@ export default {
     data() {
         return {
             videoInfo: null,
+            playbackRates,
             playbackRate: 1,
             isPlaying: false,
             currentTime: 0,
@@ -60,9 +83,6 @@ export default {
             }
             const {latitude, longitude} = this.videoInfo.json.location;
             return [latitude, longitude];
-        },
-        debouncedChangeCurrentTime() {
-            return debounce(this.changeCurrentTime, 300);
         },
         combinedVideo() {
             return {
@@ -82,7 +102,7 @@ export default {
                 // So here we can ignore the async callback race condition for all states are brand-new every time
                 try {
                     this.videoInfo = null;
-                    this.videoInfo = await Promise.race([this.fetchVideoInfo(video), cancelPromise]);
+                    this.videoInfo = await this.fetchVideoInfo(video);
                 } catch (err) {
                     this.videoInfo = err;
                 }
@@ -91,22 +111,22 @@ export default {
     },
     methods: {
         play() {
-            this.isPlaying = true;
             this.$refs.video.play();
         },
         pause() {
             this.$refs.video.pause();
-            this.isPlaying = false;
         },
-
         changeCurrentTime(val) {
-            seekTo(val * this.videoInfo.totalDuration);
+            this.$refs.video.seekTo(val * this.videoInfo.totalDuration);
         },
         formatDuration(t) {
             return dayjs.duration(t * 1000).format(t < 3600 ? 'mm:ss' : 'HH:mm:ss');
         },
 
         async fetchVideoInfo(video) {
+            // return {
+            //     totalDuration: combinedVideo.duration,
+            // };
             const {[primaryPos]: mp4Filename, jsonfile: jsonFilename} = last(video.clips);
             const videoSrc = getVideoURL(video.group, video.sequence, mp4Filename);
             const {width, height, duration: lastDuration} = await getVideoInfo(videoSrc);
@@ -120,6 +140,9 @@ export default {
 
             return info;
         },
+        isError(err) {
+            return err instanceof Error;
+        }
     }
 }
 </script>
@@ -138,13 +161,13 @@ export default {
     display: flex;
     align-items: center;
     padding: 0.5rem;
+    gap: 1.5em;
 
     .play-button {
         flex: 0 0 auto;
     }
     .progress {
         flex: 1 1 auto;
-        margin: 0 1.5em;
     }
     .time {
         flex: 0 0 auto;

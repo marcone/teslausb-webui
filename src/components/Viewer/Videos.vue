@@ -26,23 +26,22 @@ import {fromPairs, mapValues, omitBy, partial, isUndefined} from 'lodash';
 import {getVideoURL} from '@/apis/video';
 import ClipsVideo from './Video.vue';
 import Time from '../Time.vue';
-
-const positions = ['front', 'back', 'left_repeater', 'right_repeater'];
-const primaryPos = positions[0];
+import {positions, primaryPos} from './common';
 
 export default {
     components: {ClipsVideo, Time},
     props: {
         layout: String,
         playbackRate: Number,
-        video: Object
+        video: Object,
     },
     data() {
         return {
             positions,
             currentTime: 0,
-            isWaitting: false,
+            isPlaying: false,
             buffereds: fromPairs(positions.map(pos => [pos, 0])),
+            waitingFlags: fromPairs(positions.map(pos => [pos, false])),
         };
     },
     computed: {
@@ -57,6 +56,8 @@ export default {
         posToVideoEventMap() {
             return positions.reduce((ret, key) => {
                 ret[key] = mapValues(omitBy({
+                    play: key === primaryPos ? this.handleVideoPlay : undefined,
+                    pause: key === primaryPos ? this.handleVideoPause : undefined,
                     timeupdate: key === primaryPos ? this.handleVideoTimeUpdate : undefined,
                     progress: this.handleVideoBufferProgress,
                     waiting: this.handleVideoWaiting,
@@ -70,58 +71,51 @@ export default {
         currentDate() {
             return new Date(this.video.date.getTime() + this.currentTime * 1000);
         },
+        isWaitting() {
+            return Object.values(this.waitingFlags).some(flag => flag);
+        },
     },
     methods: {
         async seekTo(time) {
+            const isPreviousPlaying = this.isPlaying;
             this.pause();
-            this.$refs.videos.map(video => video.seek(time));
-            await new Promise(resolve => setTimeout(resolve, 100));
-            this.play();
+            await this.callVideos(video => video.seek(time));
+            await delay(100);
+            await (isPreviousPlaying && this.play());
         },
         async play() {
             this.pause();
-            this.$refs.videos.forEach(video => video.play());
+            await this.callVideos(video => video.play());
+
+            const cancelPromise = new Promise((resolve, reject) => {
+                this.cancelPreviousWaitForEnd = reject;
+            });
 
             // wait all videos are ended to play next clip togehter
-            await Promise.all(this.$refs.videos.map(video => new Promise(resolve => {
-                video.$once('ended', resolve);
-            })));
-
-            // wait for all videos are ready after switching to next clip
-            this.isWaitting = true;
-            try {
-                await Promise.all(this.$refs.videos.map(video => new Promise(resolve => {
-                    video.$once('canplaythrough', resolve);
-                    video.next();
-                })));
-                this.play();
-            }
-            catch (err) {
-                if (err._end) {
-                    this.$nextTick(() => this.seekTo(0));
-                }
-            }
-            finally {
-                this.isWaitting = false;
-            }
+            return Promise.race([this.callVideos(video => onceEvent(video, 'ended')), cancelPromise])
+                .then(() => this.callVideos(video => video.next()))
+                .then(() => this.play())
+                .catch((err) => err?._end && this.seekTo(0));
         },
         async handleVideoWaiting(pos) {
+            if (this.waitingFlags[pos]) {
+                return;
+            }
+            this.waitingFlags[pos] = true;
             // once any video is waiting, pause all videos
-            this.pause();
-            this.isWaitting = true;
-            await new Promise(resolve => {
-                this.$refs.videos[positions.indexOf(pos)].$once('canplaythrough', resolve);
-            });
-            this.isWaitting = false;
-            this.play();
+            const video = this.$refs.videos[positions.indexOf(pos)];
+            await new Promise(resolve => video.$once('canplaythrough', resolve));
+            await delay(100);
+            this.waitingFlags[pos] =false;
         },
-        pause() {
-            this.$refs.videos.forEach(video => {
+        async pause() {
+            this.callVideos(video => {
                 video.$off('ended');
-                video.$off('canplaythrough');
                 video.pause();
             });
-            this.isWaitting = false;
+            // previous wait-for-end promise will never settled after removing the event listener
+            // so we need to cancel it to prevent memory leak
+            this.cancelPreviousWaitForEnd && this.cancelPreviousWaitForEnd();
         },
         handleVideoTimeUpdate(pos, time) {
             this.currentTime = time;
@@ -129,13 +123,35 @@ export default {
         },
         handleVideoBufferProgress(pos, buffered) {
             this.buffereds[pos] = buffered;
+        },
+        handleVideoPlay() {
+            this.isPlaying = true;
+            this.$emit('play');
+        },
+        handleVideoPause() {
+            this.isPlaying = false;
+            this.$emit('pause');
+        },
+
+        callVideos(fn) {
+            return Promise.all(this.$refs.videos.map(fn));
         }
     },
     watch: {
         currentBufferedPercent(val) {
             this.$emit('bufferProgress', val);
         }
-    }
+    },
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function onceEvent(el, event) {
+    return new Promise(resolve => {
+        el.$once(event, resolve);
+    });
 }
 </script>
 
@@ -166,7 +182,7 @@ export default {
     color: white;
 
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 
     > div {
         aspect-ratio: 4 / 3;
@@ -195,6 +211,43 @@ export default {
         .right_repeater {order: 3;}
         .back {order: 4}
         .left_repeater {order: 5;}
+    }
+
+    &.layout-4 {
+        grid-template-areas: "date front front"
+                             "map front front"
+                             "left  back  right";
+
+        .front {grid-area: front}
+        .date {grid-area: date}
+        .map {grid-area: map}
+        .left_repeater {grid-area: left; transform: rotateY(180deg);}
+        .back {grid-area: back}
+        .right_repeater {grid-area: right; transform: rotateY(180deg);}
+    }
+
+    &.layout-5 {
+        grid-template-areas: "date  map   map"
+                             "front front front"
+                             "left  back  right";
+
+        .front,
+        .date,
+        .map {
+            aspect-ratio: 16 / 9;
+        }
+
+        .front {
+            grid-area: front;
+            /deep/ video {
+                object-fit: cover;
+            }
+        }
+        .date {grid-area: date}
+        .map {grid-area: map}
+        .left_repeater {grid-area: left; transform: rotateY(180deg);}
+        .back {grid-area: back}
+        .right_repeater {grid-area: right; transform: rotateY(180deg);}
     }
 }
 

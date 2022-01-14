@@ -1,51 +1,37 @@
 <template>
-    <span :class="{compact}">
-        <VeuiButton v-if="compact" ui="text xl" @click="handleLocaleClick">{{shortLabel}}</VeuiButton>
-        <VeuiSelect class="locale-select" :options="availableLocales" :value="currentLocale"
-            :expanded.sync="localeExpanded" @change="setLocale" />
+    <span>
+        <Dropdown v-if="compact" ui="text xl" v-bind="props" @change="setLocale">
+            <template v-slot="{short}">{{short}}</template>
+        </Dropdown>
+        <VeuiSelect v-else class="select" v-bind="props" @change="setLocale" />
     </span>
 </template>
 
 <script>
 import i18n, {setLocale, availableLocales} from '@/locale';
+import Dropdown from '../Dropdown.vue';
 
 export default {
+    components: {Dropdown},
     props: {
         compact: Boolean,
     },
-    data() {
-        return {
-            availableLocales,
-            localeExpanded: false
-        }
-    },
     computed: {
-        currentLocale() {
-            return i18n.locale;
-        },
-        shortLabel() {
-            return availableLocales.find(item => item.value === this.currentLocale).short;
+        props() {
+            return {
+                value: i18n.locale,
+                options: availableLocales
+            };
         }
     },
     methods: {
-        setLocale,
-        handleLocaleClick() {
-            this.localeExpanded = true;
-        }
+        setLocale
     }
 }
 </script>
 
 <style lang="less" scoped>
-.locale-select {
+.select {
     width: 100%;
-}
-
-.compact {
-    .locale-select {
-        width: 1px;
-        overflow: hidden;
-        visibility: hidden;
-    }
 }
 </style>

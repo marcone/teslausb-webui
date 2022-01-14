@@ -1,6 +1,6 @@
 <template>
     <div id="app" v-resize="handleResize">
-        <Header :items="links" />
+        <Header :compact="compact" :items="links" />
         <div class="tab-content">
             <router-view></router-view>
         </div>
@@ -53,7 +53,7 @@ export default {
     },
     provide() {
         return {
-            compact: this.compact,
+            env: this.$data,
         }
     }
 };

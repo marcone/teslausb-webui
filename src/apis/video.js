@@ -112,7 +112,9 @@ export function getVideoInfo(url) {
                 height: video.videoHeight,
             });
         });
-        video.addEventListener('error', reject);
+        video.addEventListener('error', function (e) {
+            reject(new Error('detect-video-error'));
+        });
     });
     video.src = url;
     return promise;

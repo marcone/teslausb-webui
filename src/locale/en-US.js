@@ -39,5 +39,12 @@ export const Viewer = {
     'layout-1': 'Sides on top, rear on bottom, mirrored',
     'layout-2': 'Side and rear on bottom, mirrored',
     'layout-3': 'Side and rear on bottom, looking back',
+    'layout-4': 'Larger front, rear on bottom, mirrored',
+    'layout-5': 'Largest front, rear on bottom, mirrored',
     'episode-select-placeholder': 'Select an episode',
+    'fetching-video-list': 'Fetching video list...',
+    'fetch-video-list-error': 'Failed to fetch video list',
+    'fetching-video-detail': 'Fetching video detail...',
+    'fetch-video-detail-error': 'Failed to fetch video detail',
+    'detect-video-error': 'Can\'t recognize video',
 };

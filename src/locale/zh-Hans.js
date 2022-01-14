@@ -39,5 +39,12 @@ export const Viewer = {
     'layout-1': '两侧在上（镜像）',
     'layout-2': '两侧在下（镜像）',
     'layout-3': '两侧在下',
+    'layout-4': '更大前摄，两侧在下（镜像）',
+    'layout-5': '最大前摄，两侧在下（镜像）',
     'episode-select-placeholder': '选择片段',
+    'fetching-video-list': '加载视频列表...',
+    'fetch-video-list-error': '加载视频列表失败',
+    'fetching-video-detail': '加载视频详情...',
+    'fetch-video-detail-error': '加载视频详情失败',
+    'detect-video-error': '无法识别视频',
 };

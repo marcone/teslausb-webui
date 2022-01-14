@@ -1,11 +1,11 @@
 <template>
-    <div class="viewer">
+    <div class="viewer" :class="{compact}">
         <div class="selects">
-            <VeuiLoading v-if="!videos" loading />
+            <VeuiLoading v-if="!videos" loading>{{ t('fetching-video-list') }}</VeuiLoading>
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
         </div>
-        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" :key="currentVideo.date" />
+        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" />
     </div>
 </template>
 
@@ -15,7 +15,7 @@ import {getVideoList} from '@/apis/video';
 import i18nMixin from '../../mixins/i18n';
 import Player from './Player.vue';
 import BingMap from './BingMap.vue';
-import EpisodeSelect from './EpisodeSelect.vue';
+import EpisodeSelect from './EpisodeSelect/Index.vue';
 
 export default {
     name: "Viewer",
@@ -30,16 +30,16 @@ export default {
     data() {
         return {
             videos: null,
-            layout: '1',
-            current: undefined,
+            layout: '4',
+            current: null,
         };
     },
     computed: {
         layouts() {
-            return ['1', '2', '3'].map(value => ({value, label: this.t(`layout-${value}`)}));
+            return ['1', '2', '3', '4', '5'].map(value => ({value, label: this.t(`layout-${value}`)}));
         },
         currentVideo() {
-            const [group, date, time] = this.current;
+            const [group, date, time] = this.current.split('$');
             return this.videos[group][date][time];
         }
     },
@@ -47,10 +47,10 @@ export default {
         const load = async () => {
             try {
                 this.videos = await getVideoList();
-                // this.current = getCurrent(this.videos);
+                this.current = getCurrent(this.videos).join('$');
             }
             catch (err) {
-                await this.$alert.error(err.message, 'Can not load videos');
+                await this.$alert.error(err.message, this.t('fetch-video-list-error'));
                 load();
             }
         };
@@ -71,6 +71,10 @@ function getCurrent(videos) {
 .viewer {
     margin: 16px 16px 0;
     position: relative;
+
+    &.compact /deep/ .picture {
+        font-size: 6px;
+    }
 }
 .selects {
     display: flex;

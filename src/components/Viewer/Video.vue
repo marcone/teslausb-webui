@@ -1,6 +1,9 @@
 <template>
     <div class="video">
         <video ref="video" muted preload="auto" playsinline :width="width" :height="height" :src="currentClip"
+            @play="$emit('play')"
+            @playing="handleVideoPlaying"
+            @pause="$emit('pause')"
             @waiting="$emit('waiting')"
             @ended="$emit('ended')"
             @seeked="$emit('seeked')"
@@ -14,7 +17,7 @@
 </template>
 
 <script>
-import {SEGMENT_DURATION} from './common';
+import {SEGMENT_DURATION, once} from './common';
 
 export default {
     props: {
@@ -22,7 +25,7 @@ export default {
         height: Number,
         playbackRate: Number,
         clips: Array,
-        duration: Number
+        duration: Number,
     },
     data() {
         return {
@@ -49,25 +52,47 @@ export default {
     methods: {
         seek(time) {
             this.pause();
-            this.currentClipIndex = Math.floor(time / SEGMENT_DURATION);
-            const seekTime = time - this.currentClipIndex * SEGMENT_DURATION;
-            this.$nextTick(() => {
+            const clipIndex = Math.floor(time / SEGMENT_DURATION);
+            const seekTime = time - clipIndex * SEGMENT_DURATION;
+
+            let promise;
+            if (clipIndex === this.currentClipIndex) {
+                promise = new Promise(resolve => {
+                    once(this.$refs.video, 'seeked', resolve);
+                });
                 this.$refs.video.currentTime = seekTime;
-            });
+            }
+            else {
+                promise = (new Promise(resolve => {
+                    once(this.$refs.video, 'loadedmetadata', resolve);
+                })).then(() => {
+                    this.$refs.video.currentTime = seekTime;
+                });
+            }
+
+            // promise.then(() => {
+            //     console.log(time, clipIndex, seekTime, this.$refs.video.currentTime);
+            // });
+
+            this.currentClipIndex = clipIndex;
+            return promise;
         },
         next() {
             if (this.currentClipIndex + 1 === this.clips.length) {
                 const err = new Error('No more clips');
                 err._end = true;
                 throw err;
-                return;
             }
+            const promise = new Promise(resolve => {
+                once(this.$refs.video, 'canplaythrough', resolve);
+            });
             this.currentClipIndex++;
             this.currentTime = 0;
             this.buffered = 0;
+            return promise;
         },
         play() {
-            this.$refs.video.play();
+            return this.$refs.video.play();
         },
         pause() {
             this.$refs.video.pause();
@@ -80,16 +105,15 @@ export default {
         handleTimeUpdate(e) {
             this.currentTime = e.target.currentTime;
             this.$emit('timeupdate', this.currentTime + SEGMENT_DURATION * this.currentClipIndex);
+        },
+        handleVideoPlaying() {
+            this.$refs.video.playbackRate = this.playbackRate;
+            this.$emit('playing');
         }
     },
     watch: {
-        playbackRate: {
-            immediate: true,
-            handler(val) {
-                this.$nextTick(() => {
-                    this.$refs.video.playbackRate = val;
-                });
-            }
+        playbackRate(val) {
+            this.$refs.video.playbackRate = val;
         }
     }
 }

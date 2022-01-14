@@ -17,7 +17,7 @@ async function before(app, server, compiler) {
 
 module.exports = {
     devServer: {
-        // before,
+        before,
         proxy: {
             '/*.txt': { target: proxyTarget },
             '/*.log': { target: proxyTarget },

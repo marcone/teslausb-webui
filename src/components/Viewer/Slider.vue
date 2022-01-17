@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import {once} from './common';
+import {once} from '../helper';
 
 export default {
     props: {

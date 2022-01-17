@@ -16,9 +16,11 @@ async function before(app, server, compiler) {
 }
 
 module.exports = {
+    publicPath: '',
     devServer: {
         // https://v4.webpack.js.org/configuration/dev-server/#devserverbefore
         // before,
+
         proxy: {
             '/*.txt': { target: proxyTarget },
             '/*.log': { target: proxyTarget },

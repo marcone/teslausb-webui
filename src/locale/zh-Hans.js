@@ -8,12 +8,19 @@ const common = {
     'viewer': '查看行车视频',
 }
 
+const datePickerShortcuts = {
+    'thisMonth': '本月',
+    'thisWeek': '本周',
+    'last7days': '最近7天',
+    'today': '今天',
+};
+
 export const AppRoot = common;
 
 export const LogPage = common;
 export const LogView = {
     'loading': '加载中...',
-    'download': '下载${title}',
+    'download': '下载{title}',
 };
 
 export const DiagnosticsPage = {
@@ -47,5 +54,8 @@ export const Viewer = {
     'fetching-video-detail': '加载视频详情...',
     'fetch-video-detail-error': '加载视频详情失败',
     'detect-video-error': '无法识别视频',
-    'user_interaction_dashcam_icon_tapped': '点击了行车记录仪图标'
+    'user_interaction_dashcam_icon_tapped': '点击了行车记录仪图标',
+    ...datePickerShortcuts,
+    'no-video-found': '没有视频',
+    'no-video-found-in-range': '选定的范围内没有视频',
 };

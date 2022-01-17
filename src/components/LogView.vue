@@ -11,7 +11,7 @@
                 <LiveTime relative :time="updateTime" />
             </div>
         </div>
-        <div class="content">
+        <div class="content" ref="content">
             <VeuiLoading :loading="!content">{{ t('loading') }}</VeuiLoading>
             <pre>{{content}}</pre>
         </div>
@@ -20,6 +20,7 @@
 
 <script>
 import {saveAs} from 'file-saver';
+import {once} from './helper';
 import i18nMixin from '../mixins/i18n';
 import {readLiveFile} from '../apis/log';
 import LiveTime from './Time.vue';
@@ -44,6 +45,15 @@ export default {
             handler() {
                 this.refresh();
             }
+        },
+        updateTime(val) {
+            if (!val || this.userTouched) { // hand over autoscroll once user scrolls
+                return;
+            }
+            this.$nextTick(() => {
+                const content = this.$refs.content;
+                content.scroll(0, content.scrollHeight);
+            });
         }
     },
     methods: {
@@ -62,6 +72,11 @@ export default {
             const blob = new Blob([this.content], {type: 'text/plain;charset=utf-8'});
             saveAs(blob, this.fileName);
         }
+    },
+    mounted() {
+        once(this.$refs.content, 'scroll', () => {
+            this.userTouched = true;
+        });
     },
     beforeDestroy() {
         this.stop && this.stop();

@@ -17,7 +17,8 @@
 </template>
 
 <script>
-import {SEGMENT_DURATION, once} from './common';
+import {SEGMENT_DURATION} from './common';
+import {once} from '../helper';
 
 export default {
     props: {

@@ -8,6 +8,7 @@ import alert from 'veui/plugins/alert';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import duration from 'dayjs/plugin/duration';
+import isBetween from 'dayjs/plugin/isBetween';
 import 'dayjs/locale/en';
 import 'dayjs/locale/zh-cn';
 
@@ -23,6 +24,7 @@ Vue.use(VueRouter);
 
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
+dayjs.extend(isBetween);
 
 const router = new VueRouter({ routes });
 router.beforeEach(function (to, from, next) {

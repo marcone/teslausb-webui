@@ -5,12 +5,13 @@
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
         </div>
-        <Player class="video" v-if="current" :video="currentVideo" :layout="layout" 
-            :key="currentVideo.date.getTime()" />
+        <Player v-if="current" :video="currentVideo" :key="currentVideo.date.getTime()"
+            class="video" :layout="layout" :compact="env.compact" />
     </div>
 </template>
 
 <script>
+import {last} from 'lodash';
 import {tooltip} from 'veui';
 import {getVideoList} from '@/apis/video';
 import i18nMixin from '../../mixins/i18n';
@@ -63,8 +64,8 @@ export default {
 
 function getCurrent(videos) {
     const group = Object.keys(videos)[0];
-    const date = Object.keys(videos[group])[0];
-    const time = Object.keys(videos[group][date])[0];
+    const date = last(Object.keys(videos[group]));
+    const time = last(Object.keys(videos[group][date]));
     return [group, date, time];
 }
 </script>

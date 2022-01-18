@@ -9,10 +9,10 @@
                 :video="combinedVideo"
                 :playbackRate="playbackRate"
                 :layout="layout"
-                @timeupdate="currentTime = $event"
-                @bufferProgress="bufferedProgress = $event"
-                @play="isPlaying = true"
-                @pause="isPlaying = false"
+                @update="videoStatus = $event"
+                @playing="isPlaying = $event"
+                @click.native="isPlaying ? pause() : play()"
+                @dblclick.native="enterFullscreen"
             >
                 <template #map v-if="currentLocation">
                     <BingMap :coordinate="currentLocation" />
@@ -23,17 +23,28 @@
                 </template>
             </Videos>
             <div class="controls">
-                <VeuiButton class="play-button" ui="icon l" @click="isPlaying ? pause() : play()">
-                    <template v-if="isPlaying">
-                        <VeuiIcon name="pause" />
-                    </template>
-                    <template v-else>
-                        <VeuiIcon name="play" />
-                    </template>
-                </VeuiButton>
+                <div class="play-buttons">
+                    <VeuiButton v-if="!compact" :disabled="currentTime <= 0"
+                    class="seek-button" ui="icon" @click="fastseek(-30)">
+                        <VeuiIcon name="anticlockwise" />
+                    </VeuiButton>
+                    <VeuiButton class="play-button" ui="icon" @click="isPlaying ? pause() : play()">
+                        <template v-if="isPlaying">
+                            <VeuiIcon name="pause" />
+                        </template>
+                        <template v-else>
+                            <VeuiIcon name="play" />
+                        </template>
+                    </VeuiButton>
+                    <VeuiButton v-if="!compact" :disabled="currentTime >= videoInfo.duration - 1"
+                        class="seek-button" ui="icon" @click="fastseek(30)">
+                        <VeuiIcon name="clockwise" />
+                    </VeuiButton>
+                </div>
                 <Slider class="progress"
                     :value="currentTime / videoInfo.totalDuration"
-                    :secondary-progress="bufferedProgress"
+                    :secondary-progress="buffered"
+                    :hot-point="hotPoint"
                     @change="changeCurrentTime"
                 >
                     <template v-slot="{value}">{{ formatDuration(value * videoInfo.totalDuration) }}</template>
@@ -51,23 +62,28 @@
 
 <script>
 import dayjs from 'dayjs';
-import {last} from 'lodash';
+import {last, clamp} from 'lodash';
 import 'veui-theme-dls-icons/play';
 import 'veui-theme-dls-icons/pause';
+import 'veui-theme-dls-icons/anticlockwise';
+import 'veui-theme-dls-icons/clockwise';
 import {getVideoURL, getVideoInfo} from '@/apis/video';
 import BingMap from './BingMap.vue';
 import {primaryPos, SEGMENT_DURATION} from './common';
 import Dropdown from '../Dropdown.vue';
 import Slider from './Slider.vue';
+import Videos from './Videos.vue';
 
 const playbackRates = [0.5, 1, 1.25, 1.5, 2, 4].map(value => ({value, label: `${value}x`}));
 
+
 export default {
     inject: ['t'],
-    components: {BingMap, Dropdown, Slider},
+    components: {Videos, BingMap, Dropdown, Slider},
     props: {
         layout: String,
-        video: Object
+        video: Object,
+        compact: Boolean
     },
     data() {
         return {
@@ -75,8 +91,7 @@ export default {
             playbackRates,
             playbackRate: 1,
             isPlaying: false,
-            currentTime: 0,
-            bufferedProgress: 0
+            videoStatus: undefined
         };
     },
     computed: {
@@ -88,12 +103,25 @@ export default {
             return [est_lat, est_lon];
         },
         combinedVideo() {
+            // return combinedVideo;
             return {
                 ...this.video,
                 width: this.videoInfo.width,
                 height: this.videoInfo.height,
                 duration: this.videoInfo.totalDuration,
             }
+        },
+        hotPoint() {
+            if (!this.videoInfo.timestamp) {
+                return;
+            }
+            return (this.videoInfo.timestamp.getTime() - this.combinedVideo.date.getTime()) / (this.combinedVideo.duration * 1000);
+        },
+        currentTime() {
+            return this.videoStatus?.[0];
+        },
+        buffered() {
+            return this.videoStatus?.[1];
         }
     },
     watch: {
@@ -119,15 +147,25 @@ export default {
         pause() {
             this.$refs.video.pause();
         },
+        fastseek(offsetTime) {
+            if (this.currentTime <= 0 || this.currentTime >= this.videoInfo.totalDuration - 1) {
+                return;
+            }
+            this.$refs.video.seek(clamp(this.currentTime + offsetTime, 0, this.videoInfo.totalDuration - 1));
+        },
         changeCurrentTime(val) {
-            this.$refs.video.seekTo(val * this.videoInfo.totalDuration);
+            this.$refs.video.seek(val * this.videoInfo.totalDuration);
         },
         formatDuration(t) {
             return dayjs.duration(t * 1000).format(t < 3600 ? 'mm:ss' : 'HH:mm:ss');
         },
+        enterFullscreen() {
+            this.$el.requestFullscreen();
+        },
 
         async fetchVideoInfo(video) {
             // return {
+            //     timestamp: new Date('2022/01/06 10:29:54'),
             //     totalDuration: combinedVideo.duration,
             // };
             const {jsonfile: jsonFilename} = video;
@@ -146,7 +184,27 @@ export default {
         },
         isError(err) {
             return err instanceof Error;
+        },
+
+        handleKeypress(e) {
+            switch (e.code) {
+                case 'ArrowRight':
+                    this.fastseek(30);
+                    break;
+                case 'ArrowLeft':
+                    this.fastseek(-30);
+                    break;
+                case 'Space':
+                    this.isPlaying ? this.pause() : this.play();
+                    break;
+            }
         }
+    },
+    mounted() {
+        document.addEventListener('keydown', this.handleKeypress);
+    },
+    beforeDestroy() {
+        document.removeEventListener('keydown', this.handleKeypress);
     }
 }
 </script>
@@ -162,19 +220,32 @@ export default {
 }
 
 .controls {
+    background: white;
     display: flex;
     align-items: center;
     padding: 0.5rem;
     gap: 1.5em;
 
-    .play-button {
+    > div,
+    > span {
         flex: 0 0 auto;
     }
     .progress {
         flex: 1 1 auto;
     }
-    .time {
-        flex: 0 0 auto;
+
+    .seek-button {
+        font-size: .8em;
+    }
+
+    .play-button {
+        font-size: 1.2em;
+    }
+
+    .play-buttons {
+        display: flex;
+        gap: 0.75em;
+        align-items: center;
     }
 }
 </style>

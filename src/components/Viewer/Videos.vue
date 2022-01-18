@@ -1,13 +1,7 @@
 <template>
     <div class="videos">
         <div class="picture" :class="{[`layout-${layout}`]: true}">
-            <div :class="pos" v-for="pos in positions" :key="pos">
-                <ClipsVideo ref="videos"
-                    :playbackRate="playbackRate"
-                    v-bind="posToClipsMap[pos]"
-                    v-on="posToVideoEventMap[pos]"
-                />
-            </div>
+            <div :class="pos" v-for="pos in positions" :key="pos" ref="videoContainers"></div>
             <div class="map">
                 <slot name="map" />
             </div>
@@ -16,21 +10,23 @@
                 <slot name="meta"></slot>
             </div>
         </div>
-        <div v-if="isWaitting" class="loading">
+        <div v-if="isWaiting" class="loading">
             <VeuiLoading loading ui="reverse" />
         </div>
     </div>
 </template>
 
 <script>
-import {fromPairs, mapValues, omitBy, partial, isUndefined} from 'lodash';
+import {fromPairs, zipObject} from 'lodash';
 import {getVideoURL} from '@/apis/video';
-import ClipsVideo from './Video.vue';
 import Time from '../Time.vue';
-import {positions, primaryPos} from './common';
+import {positions, SEGMENT_DURATION} from './common';
+import MultipleVideoController from './MultipleVideoController';
+
+const enablePreload = true;
 
 export default {
-    components: {ClipsVideo, Time},
+    components: {Time},
     props: {
         layout: String,
         playbackRate: Number,
@@ -39,120 +35,116 @@ export default {
     data() {
         return {
             positions,
-            currentTime: 0,
+            currentClipIndex: 0,
             isPlaying: false,
-            buffereds: fromPairs(positions.map(pos => [pos, 0])),
-            waitingFlags: fromPairs(positions.map(pos => [pos, false])),
+            videoController: undefined
         };
     },
     computed: {
-        posToClipsMap() {
-            const {group, sequence, width, height, duration} = this.video;
-            return positions.reduce((ret, key) => {
-                const clips = this.video.clips.map(clip => getVideoURL(group, sequence, clip[key]));
-                ret[key] = {clips, width, height, duration};
-                return ret;
-            }, {});
+        currentClip() {
+            return this.getClip(this.currentClipIndex);
         },
-        posToVideoEventMap() {
-            return positions.reduce((ret, key) => {
-                ret[key] = mapValues(omitBy({
-                    play: key === primaryPos ? this.handleVideoPlay : undefined,
-                    pause: key === primaryPos ? this.handleVideoPause : undefined,
-                    timeupdate: key === primaryPos ? this.handleVideoTimeUpdate : undefined,
-                    progress: this.handleVideoBufferProgress,
-                    waiting: this.handleVideoWaiting,
-                }, isUndefined), fn => partial(fn, key));
-                return ret;
-            }, {});
+        isWaiting() {
+            return this.videoController?.isWaiting;
         },
-        currentBufferedPercent() {
-            return Math.min(...Object.values(this.buffereds));
+        currentTime() {
+            return this.currentClipIndex * SEGMENT_DURATION + this.videoController?.currentTime;
         },
         currentDate() {
             return new Date(this.video.date.getTime() + this.currentTime * 1000);
         },
-        isWaitting() {
-            return Object.values(this.waitingFlags).some(flag => flag);
+        buffered() {
+            return (this.currentClipIndex * SEGMENT_DURATION + this.videoController?.buffered) / this.video.duration;
         },
-    },
-    methods: {
-        async seekTo(time) {
-            const isPreviousPlaying = this.isPlaying;
-            this.pause();
-            await this.callVideos(video => video.seek(time));
-            await delay(100);
-            await (isPreviousPlaying && this.play());
-        },
-        async play() {
-            this.pause();
-            await this.callVideos(video => video.play());
-
-            const cancelPromise = new Promise((resolve, reject) => {
-                this.cancelPreviousWaitForEnd = reject;
-            });
-
-            // wait all videos are ended to play next clip togehter
-            return Promise.race([this.callVideos(video => onceEvent(video, 'ended')), cancelPromise])
-                .then(() => this.callVideos(video => video.next()))
-                .then(() => this.play())
-                .catch((err) => err?._end && this.seekTo(0));
-        },
-        async handleVideoWaiting(pos) {
-            if (this.waitingFlags[pos]) {
-                return;
-            }
-            this.waitingFlags[pos] = true;
-            // once any video is waiting, pause all videos
-            const video = this.$refs.videos[positions.indexOf(pos)];
-            await new Promise(resolve => video.$once('canplaythrough', resolve));
-            await delay(100);
-            this.waitingFlags[pos] =false;
-        },
-        async pause() {
-            this.callVideos(video => {
-                video.$off('ended');
-                video.pause();
-            });
-            // previous wait-for-end promise will never settled after removing the event listener
-            // so we need to cancel it to prevent memory leak
-            this.cancelPreviousWaitForEnd && this.cancelPreviousWaitForEnd();
-        },
-        handleVideoTimeUpdate(pos, time) {
-            this.currentTime = time;
-            this.$emit('timeupdate', time);
-        },
-        handleVideoBufferProgress(pos, buffered) {
-            this.buffereds[pos] = buffered;
-        },
-        handleVideoPlay() {
-            this.isPlaying = true;
-            this.$emit('play');
-        },
-        handleVideoPause() {
-            this.isPlaying = false;
-            this.$emit('pause');
-        },
-
-        callVideos(fn) {
-            return Promise.all(this.$refs.videos.map(fn));
-        }
     },
     watch: {
-        currentBufferedPercent(val) {
-            this.$emit('bufferProgress', val);
+        playbackRate(val) {
+            this.videoController.playbackRate = val;
+        },
+        currentTime(val) {
+            this.$emit('update', [val, this.buffered]);
+        },
+        buffered(val) {
+            this.$emit('update', [this.currentTime, val]);
+        },
+        isPlaying(val) {
+            this.$emit('playing', val);
+        },
+        currentClipIndex: {
+            immediate: true,
+            handler(clipIndex) {
+                this.videoController && this.videoController.detach();
+                this.videoController = this.createVideoController(clipIndex);
+            }
         }
     },
-}
+    methods: {
+        getClip(i) {
+            const {clips, group, sequence} = this.video;
+            return fromPairs(Object.entries(clips[i])
+                .map(([key, filename]) => [key, {src: getVideoURL(group, sequence, filename)}]));
+        },
+        createVideoController(clipIndex) {
+            const controller = this.videoController?.next?.clipIndex === clipIndex
+                ? this.videoController.next
+                : new MultipleVideoController(this.getClip(clipIndex), true);
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+            controller.playbackRate = this.playbackRate;
+            controller.on('ended', () => {
+                if (this.currentClipIndex + 1 >= this.video.clips.length) {
+                    this.currentClipIndex = 0;
+                    this.isPlaying = false;
+                    return;
+                }
+                this.nextAutoplay = ++this.currentClipIndex;
+            });
+            this.$nextTick(() => {
+                const containers = zipObject(this.positions, this.$refs.videoContainers);
+                controller.attach(containers);
+            });
+            if (this.nextAutoplay === this.currentClipIndex) {
+                controller.play();
+            }
 
-function onceEvent(el, event) {
-    return new Promise(resolve => {
-        el.$once(event, resolve);
-    });
+            // preload next if current videos are all loaded
+            const nextClipIndex = clipIndex + 1;
+            if (enablePreload && nextClipIndex < this.video.clips.length) {
+                setTimeout(() => {
+                    const nextController = new MultipleVideoController(this.getClip(nextClipIndex), false);
+                    this.videoController.next = nextController;
+                    this.videoController.next.clipIndex = nextClipIndex;
+
+                    controller.on('buffered', p => p > .99 && nextController.load());
+                }, 0);
+            }
+
+            return controller;
+        },
+        play() {
+            this.isPlaying = true;
+            this.videoController.play();
+        },
+        pause() {
+            this.videoController.pause();
+            this.isPlaying = false;
+        },
+        seek(time) {
+            const clipIndex = Math.floor(time / SEGMENT_DURATION);
+            const timeInClip = time % SEGMENT_DURATION;
+            if (clipIndex !== this.currentClipIndex) {
+                this.currentClipIndex = clipIndex;
+                if (this.isPlaying) {
+                    this.nextAutoplay = clipIndex;
+                }
+                this.$nextTick(() => {
+                    this.videoController.currentTime = timeInClip;
+                });
+            }
+            else {
+                this.videoController.currentTime = timeInClip;
+            }
+        }
+    }
 }
 </script>
 
@@ -187,6 +179,12 @@ function onceEvent(el, event) {
 
     > div {
         aspect-ratio: 4 / 3;
+    }
+
+    /deep/ video {
+        display: block;
+        width: 100%;
+        height: 100%;
     }
 
     &.layout-1 {

@@ -116,18 +116,16 @@ class VideoController extends EventEmitter {
         this.fire('resume');
     }
 
-    _handleError(e) {
-        if (e.code === 2) { // MEDIA_ERR_NETWORK -> retry
+    _handleError() {
+        const err = this.el.error;
+        if (err.code === 2) { // MEDIA_ERR_NETWORK -> retry
             this._isWaiting = false;
             this._handleWaitting();
             return;
         }
-
-        const container = this.el.parentElement;
-        this.detach();
-        const errorMessage = document.createElement('div');
-        errorMessage.innerText = e.message;
-        container.appendChild(errorMessage);
+        if (this.container) {
+            this.container.dataset.error = err.message;
+        }
         this.fire('error');
     }
 
@@ -154,13 +152,16 @@ class VideoController extends EventEmitter {
     }
 
     attach(container) {
+        container.dataset.error = '';
         container.appendChild(this.el);
+        if (this.el.error) {
+            container.dataset.error = this.el.error.message;
+        }
+        this.container = container;
     }
 
     detach() {
-        const container = this.el.parentElement;
-        container.removeChild(this.el);
-        container.innerHTML = '';
+        this.container.innerHTML = '';
     }
 }
 

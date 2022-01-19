@@ -183,48 +183,63 @@ export default {
         height: 100%;
     }
 
+    &.layout-1,
+    &.layout-2,
+    &.layout-4,
+    &.layout-5 {
+        .left_repeater,
+        .right_repeater,
+        .back {
+            /deep/ video {
+                transform: rotateY(180deg);
+            }
+        }
+    }
+
     &.layout-1 {
-        .left_repeater {order: 0; transform: rotateY(180deg);}
+        .left_repeater {order: 0}
         .front {order: 1}
-        .right_repeater {order: 2; transform: rotateY(180deg);}
+        .right_repeater {order: 2}
         .map {order: 3}
-        .back {order: 4; transform: rotateY(180deg);}
+        .back {order: 4}
         .meta {order: 5}
     }
     &.layout-2 {
         .map {order: 0}
         .front {order: 1}
         .meta {order: 2}
-        .left_repeater {order: 3; transform: rotateY(180deg);}
-        .back {order: 4; transform: rotateY(180deg);}
-        .right_repeater {order: 5; transform: rotateY(180deg);}
+        .left_repeater {order: 3}
+        .back {order: 4}
+        .right_repeater {order: 5}
     }
     &.layout-3 {
         .map {order: 0}
         .front {order: 1}
         .meta {order: 2}
-        .right_repeater {order: 3;}
+        .right_repeater {order: 3}
         .back {order: 4}
-        .left_repeater {order: 5;}
+        .left_repeater {order: 5}
     }
 
     &.layout-4 {
-        grid-template-areas: "meta front front"
-                             "map front front"
-                             "left  back  right";
+        grid-template-areas:
+            "meta front front"
+            "map front front"
+            "left  back  right";
 
         .front {grid-area: front}
         .meta {grid-area: meta}
         .map {grid-area: map}
-        .left_repeater {grid-area: left; transform: rotateY(180deg);}
+        .left_repeater {grid-area: left}
         .back {grid-area: back}
-        .right_repeater {grid-area: right; transform: rotateY(180deg);}
+        .right_repeater {grid-area: right}
     }
 
     &.layout-5 {
-        grid-template-areas: "meta  map   map"
-                             "front front front"
-                             "left  back  right";
+        grid-template-areas:
+            "meta  map   map"
+            "front front front"
+            "left  back  right";
 
         .front,
         .meta,
@@ -246,9 +261,9 @@ export default {
             flex-direction: column-reverse;
         }
         .map {grid-area: map}
-        .left_repeater {grid-area: left; transform: rotateY(180deg);}
+        .left_repeater {grid-area: left}
         .back {grid-area: back}
-        .right_repeater {grid-area: right; transform: rotateY(180deg);}
+        .right_repeater {grid-area: right}
     }
 }
 
@@ -256,9 +271,12 @@ export default {
     position: relative;
 
     &::after {
-        content: '';
+        content: attr(data-error);
         position: absolute;
         inset: 0;
+        display: flex;
+        align-items: center;
+        text-align: center;
     }
 }
 

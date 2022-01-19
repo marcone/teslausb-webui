@@ -3,7 +3,7 @@
         <div class="selects">
             <VeuiLoading v-if="!videos" loading>{{ t('fetching-video-list') }}</VeuiLoading>
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
-            <VeuiSelect class="layout-select" v-model="layout" :options="layouts" />
+            <VeuiSelect class="layout-select" :value="layout" :options="layouts" @change="handleLayoutChange" />
         </div>
         <Player v-if="current" :video="currentVideo" :key="currentVideo.date.getTime()"
             class="video" :layout="layout" :compact="env.compact" />
@@ -46,6 +46,12 @@ export default {
             return this.videos[group][date][time];
         }
     },
+    methods: {
+        handleLayoutChange(val) {
+            this.layout = val;
+            localStorage.setItem('layout', val);
+        }
+    },
     async mounted() {
         const load = async () => {
             try {
@@ -59,6 +65,11 @@ export default {
         };
 
         load();
+
+        const layout = localStorage.getItem('layout');
+        if (layout) {
+            this.layout = layout;
+        }
     }
 };
 

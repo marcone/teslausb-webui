@@ -1,11 +1,12 @@
 <template>
     <div class="videos">
         <div class="picture" :class="{[`layout-${layout}`]: true}">
-            <div :class="pos" v-for="pos in positions" :key="pos" ref="videoContainers"></div>
-            <div class="map">
+            <div class="item video" :class="pos"
+                v-for="pos in positions" :key="pos" ref="videoContainers"></div>
+            <div class="item map">
                 <slot name="map" />
             </div>
-            <div class="meta">
+            <div class="item meta">
                 <div><Time :time="currentDate" /></div>
                 <slot name="meta"></slot>
             </div>
@@ -151,11 +152,6 @@ export default {
 <style lang="less" scoped>
 .videos {
     position: relative;
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-    }
 
     .loading {
         position: absolute;
@@ -177,7 +173,7 @@ export default {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
 
-    > div {
+    .item {
         aspect-ratio: 4 / 3;
     }
 
@@ -213,12 +209,12 @@ export default {
     }
 
     &.layout-4 {
-        grid-template-areas: "date front front"
+        grid-template-areas: "meta front front"
                              "map front front"
                              "left  back  right";
 
         .front {grid-area: front}
-        .date {grid-area: date}
+        .meta {grid-area: meta}
         .map {grid-area: map}
         .left_repeater {grid-area: left; transform: rotateY(180deg);}
         .back {grid-area: back}
@@ -226,12 +222,12 @@ export default {
     }
 
     &.layout-5 {
-        grid-template-areas: "date  map   map"
+        grid-template-areas: "meta  map   map"
                              "front front front"
                              "left  back  right";
 
         .front,
-        .date,
+        .meta,
         .map {
             aspect-ratio: 16 / 9;
         }
@@ -242,11 +238,27 @@ export default {
                 object-fit: cover;
             }
         }
-        .date {grid-area: date}
+        .meta {
+            grid-area: meta;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+        }
         .map {grid-area: map}
         .left_repeater {grid-area: left; transform: rotateY(180deg);}
         .back {grid-area: back}
         .right_repeater {grid-area: right; transform: rotateY(180deg);}
+    }
+}
+
+.video {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
     }
 }
 
@@ -258,7 +270,7 @@ export default {
 }
 
 .meta {
-    padding: 0.5em;
+    padding: 0.8em;
     font-size: 1.4em;
 }
 </style>

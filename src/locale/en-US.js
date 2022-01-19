@@ -17,6 +17,10 @@ const datePickerShortcuts = {
 
 export const AppRoot = common;
 
+export const Header = {
+    'back-to-legacy': 'Back to Legacy',
+};
+
 export const LogPage = common;
 export const LogView = {
     'loading': 'Loading...',

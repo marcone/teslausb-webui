@@ -17,6 +17,10 @@ const datePickerShortcuts = {
 
 export const AppRoot = common;
 
+export const Header = {
+    'back-to-legacy': '回到旧版',
+};
+
 export const LogPage = common;
 export const LogView = {
     'loading': '加载中...',

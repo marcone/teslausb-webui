@@ -11,7 +11,7 @@
                 :layout="layout"
                 @update="videoStatus = $event"
                 @playing="isPlaying = $event"
-                @click.native="isPlaying ? pause() : play()"
+                @click.native="handleVideoClick"
                 @dblclick.native="enterFullscreen"
             >
                 <template #map v-if="currentLocation">
@@ -76,7 +76,6 @@ import Videos from './Videos.vue';
 
 const playbackRates = [0.5, 1, 1.25, 1.5, 2, 4].map(value => ({value, label: `${value}x`}));
 
-
 export default {
     inject: ['t'],
     components: {Videos, BingMap, Dropdown, Slider},
@@ -103,7 +102,6 @@ export default {
             return [est_lat, est_lon];
         },
         combinedVideo() {
-            // return combinedVideo;
             return {
                 ...this.video,
                 width: this.videoInfo.width,
@@ -115,7 +113,9 @@ export default {
             if (!this.videoInfo.timestamp) {
                 return;
             }
-            return (this.videoInfo.timestamp.getTime() - this.combinedVideo.date.getTime()) / (this.combinedVideo.duration * 1000);
+            const offset = (this.videoInfo.timestamp.getTime() - this.combinedVideo.date.getTime()) / 1000;
+            const p = offset / this.combinedVideo.duration;
+            return p < .99 ? p : undefined;
         },
         currentTime() {
             return this.videoStatus?.[0];
@@ -164,10 +164,6 @@ export default {
         },
 
         async fetchVideoInfo(video) {
-            // return {
-            //     timestamp: new Date('2022/01/06 10:29:54'),
-            //     totalDuration: combinedVideo.duration,
-            // };
             const {jsonfile: jsonFilename} = video;
             const {[primaryPos]: mp4Filename} = last(video.clips);
             const videoSrc = getVideoURL(video.group, video.sequence, mp4Filename);
@@ -178,6 +174,7 @@ export default {
             if (jsonFilename) {
                 const jsonUrl = getVideoURL(video.group, video.sequence, jsonFilename);
                 info.json = await fetch(jsonUrl).then(res => res.json());
+                info.timestamp = dayjs(info.json.timestamp).toDate();
             }
 
             return info;
@@ -186,6 +183,11 @@ export default {
             return err instanceof Error;
         },
 
+        handleVideoClick(e) {
+            if (e.target.closest('.item.video')) {
+                this.isPlaying ? this.pause() : this.play();
+            }
+        },
         handleKeypress(e) {
             switch (e.code) {
                 case 'ArrowRight':

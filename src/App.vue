@@ -1,6 +1,6 @@
 <template>
     <div id="app" v-resize="handleResize">
-        <Header :compact="compact" :items="links" />
+        <Header :items="links" />
         <div class="tab-content">
             <router-view></router-view>
         </div>
@@ -34,6 +34,7 @@ export default {
     data() {
         return {
             compact: false,
+            source: undefined
         }
     },
     computed: {
@@ -50,6 +51,7 @@ export default {
     },
     mounted() {
         this.handleResize();
+        this.source = getUrlQuery('source');
     },
     provide() {
         return {
@@ -57,6 +59,11 @@ export default {
         }
     }
 };
+
+function getUrlQuery(key) {
+    const query = new URLSearchParams(location.search);
+    return query.get(key);
+}
 </script>
 
 <style lang="less" scoped>

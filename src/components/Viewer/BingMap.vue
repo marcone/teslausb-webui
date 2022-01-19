@@ -8,7 +8,7 @@
 import {resize} from 'veui';
 
 const bingMapParams = {
-    lvl: 18,
+    lvl: 16,
     typ: 'd',
     sty: 'h',
     src: 'SHELL',

@@ -154,6 +154,7 @@ export default {
         aspect-ratio: 4 / 3;
 
         img {
+            display: block;
             width: 100%;
         }
     }

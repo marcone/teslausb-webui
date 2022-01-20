@@ -21,7 +21,7 @@
 import {fromPairs, zipObject} from 'lodash';
 import {getVideoURL} from '@/apis/video';
 import Time from '../Time.vue';
-import {positions, SEGMENT_DURATION} from './common';
+import {positions, SEGMENT_DURATION} from '@/common';
 import MultipleVideoController from './MultipleVideoController';
 
 const enablePreload = true;
@@ -52,7 +52,8 @@ export default {
             return this.currentClipIndex * SEGMENT_DURATION + this.videoController?.currentTime;
         },
         currentDate() {
-            return new Date(this.video.date.getTime() + this.currentTime * 1000);
+            const clipDate = this.video.clips[this.currentClipIndex].date;
+            return new Date(clipDate.getTime() + this.videoController?.currentTime * 1000);
         },
         buffered() {
             return (this.currentClipIndex * SEGMENT_DURATION + this.videoController?.buffered) / this.video.duration;
@@ -74,7 +75,9 @@ export default {
         currentClipIndex: {
             immediate: true,
             handler(clipIndex) {
-                this.videoController && this.videoController.detach();
+                // destroy current controller and create the next one
+                // TBD: use MPEG-DASH to enhance performance significantly
+                this.videoController && this.videoController.destroy();
                 this.videoController = this.createVideoController(clipIndex);
             }
         }
@@ -82,8 +85,10 @@ export default {
     methods: {
         getClip(i) {
             const {clips, group, sequence} = this.video;
-            return fromPairs(Object.entries(clips[i])
-                .map(([key, filename]) => [key, {src: getVideoURL(group, sequence, filename)}]));
+            return fromPairs(positions.map(key => {
+                const filename = clips[i][key];
+                return [key, {key, src: getVideoURL(group, sequence, filename)}];
+            }));
         },
         createVideoController(clipIndex) {
             const controller = this.videoController?.next?.clipIndex === clipIndex
@@ -175,6 +180,7 @@ export default {
 
     .item {
         aspect-ratio: 4 / 3;
+        word-break: break-all;
     }
 
     /deep/ video {

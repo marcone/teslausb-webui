@@ -13,7 +13,7 @@
 
 <script>
 import i18nMixin from '../mixins/i18n';
-import {callCgi} from '../apis/common';
+import {callCgi} from '../apis/helper';
 import LogView from './LogView';
 
 export default {

@@ -19,7 +19,7 @@
                 </template>
                 <template #meta v-if="videoInfo.json">
                     <div>{{ videoInfo.json.city }}</div>
-                    <div>{{ t(videoInfo.json.reason) }}</div>
+                    <div><small>{{ videoInfo.json.reason }}</small></div>
                 </template>
             </Videos>
             <div class="controls">
@@ -62,14 +62,14 @@
 
 <script>
 import dayjs from 'dayjs';
-import {last, clamp} from 'lodash';
+import {last, clamp, findLastIndex} from 'lodash';
 import 'veui-theme-dls-icons/play';
 import 'veui-theme-dls-icons/pause';
 import 'veui-theme-dls-icons/anticlockwise';
 import 'veui-theme-dls-icons/clockwise';
 import {getVideoURL, getVideoInfo} from '@/apis/video';
 import BingMap from './BingMap.vue';
-import {primaryPos, SEGMENT_DURATION} from './common';
+import {primaryPos, SEGMENT_DURATION} from '@/common';
 import Dropdown from '../Dropdown.vue';
 import Slider from './Slider.vue';
 import Videos from './Videos.vue';
@@ -113,8 +113,9 @@ export default {
             if (!this.videoInfo.timestamp) {
                 return;
             }
-            const offset = (this.videoInfo.timestamp.getTime() - this.combinedVideo.date.getTime()) / 1000;
-            const p = offset / this.combinedVideo.duration;
+            const i = findLastIndex(this.video.clips, clip => clip.date.getTime() < this.videoInfo.timestamp.getTime());
+            const offset = (this.videoInfo.timestamp.getTime() - this.video.clips[i].date.getTime()) / 1000;
+            const p = (offset + i * SEGMENT_DURATION) / this.combinedVideo.duration;
             return p < .99 ? p : undefined;
         },
         currentTime() {

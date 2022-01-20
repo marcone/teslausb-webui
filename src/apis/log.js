@@ -1,5 +1,5 @@
 import {noop} from 'lodash';
-import {cacheBustinguURL, delay} from './common';
+import {cacheBustinguURL, delay} from './helper';
 
 function readFile(url, range) {
     const headers = new Headers();
@@ -32,7 +32,7 @@ export function readLiveFile(url, onUpdate = noop) {
             return;
         }
         prevNextOffset = offset;
-        
+
         const response = await readFile(url, [offset - 1, offset + 32768]);
         if (response.status === 206) {
             const content = await response.text();

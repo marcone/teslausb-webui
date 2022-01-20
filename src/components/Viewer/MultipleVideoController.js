@@ -1,6 +1,12 @@
 import Vue from 'vue';
-import { fromPairs } from 'lodash';
-import {positions} from './common';
+import {fromPairs} from 'lodash';
+import {positions} from '@/common';
+
+function log(...args) {
+    if (process.env.NODE_ENV === 'development') {
+        console.log(...args);
+    }
+}
 
 class EventEmitter {
     events = {};
@@ -36,33 +42,15 @@ class EventEmitter {
         }
         this.events[event].forEach(callback => callback(...args));
     }
-}
 
-function once(el, event, callback) {
-    const once = (...args) => {
-        el.removeEventListener(event, once);
-        callback(...args);
+    clear() {
+        this.events = {};
     }
-    el.addEventListener(event, once);
-}
-
-function oncePromise(el, event) {
-    return new Promise(resolve => once(el, event, resolve));
-}
-
-async function waitUntil(check, interval) {
-    while (!check()) {
-        await delay(interval);
-    }
-}
-
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 class VideoController extends EventEmitter {
 
-    constructor({src}) {
+    constructor({key, src}) {
         super();
 
         const el = document.createElement('video');
@@ -70,6 +58,8 @@ class VideoController extends EventEmitter {
         el.preload = 'none';
         el.src = src;
         this.el = el;
+
+        this.key = key;
     }
 
     set playbackRate(rate) {
@@ -109,27 +99,32 @@ class VideoController extends EventEmitter {
         if (this._isWaiting) { // waiting event is fired continuously
             return;
         }
+        log('waiting', this.key);
         this._isWaiting = true;
         this.fire('waiting');
         await this._waitForEnoughData();
         this._isWaiting = false;
+        log('resume', this.key);
         this.fire('resume');
     }
 
+    _retry = 0;
     _handleError() {
-        const err = this.el.error;
-        if (err.code === 2) { // MEDIA_ERR_NETWORK -> retry
+        const err = this.el.error || {};
+        log('error', this.key, err);
+        if (err.code === 2 && this._retry++ < 3) { // MEDIA_ERR_NETWORK -> retry
             this._isWaiting = false;
             this._handleWaitting();
             return;
         }
         if (this.container) {
-            this.container.dataset.error = err.message;
+            this.container.dataset.error = err.message || 'Unknown error';
         }
         this.fire('error');
     }
 
     load() {
+        log('load', this.key);
         this._updateBuffered();
         this.el.addEventListener('waiting', this._handleWaitting.bind(this));
         this.el.addEventListener('timeupdate', e => this.fire('timeupdate', e.target.currentTime));
@@ -141,7 +136,9 @@ class VideoController extends EventEmitter {
     }
 
     async play() {
+        log('play wait start', this.key);
         await this._waitForEnoughData();
+        log('play wait end', this.key);
         const promise = oncePromise(this.el, 'playing');
         this.el.play();
         return promise;
@@ -162,6 +159,14 @@ class VideoController extends EventEmitter {
 
     detach() {
         this.container.innerHTML = '';
+        this.container = undefined;
+    }
+
+    destroy() {
+        log('destroy', this.key);
+        this.clear();
+        this.detach();
+        this.el.src = null;
     }
 }
 
@@ -288,7 +293,29 @@ export default class MultipleVideoController extends EventEmitter {
         this._callControllers((controller, key) => controller.attach(containers[key]));
     }
 
-    detach() {
-        this._callControllers(controller => controller.detach());
+    destroy() {
+        this._callControllers(controller => controller.destroy());
     }
+}
+
+function once(el, event, callback) {
+    const once = (...args) => {
+        el.removeEventListener(event, once);
+        callback(...args);
+    }
+    el.addEventListener(event, once);
+}
+
+function oncePromise(el, event) {
+    return new Promise(resolve => once(el, event, resolve));
+}
+
+async function waitUntil(check, interval) {
+    while (!check()) {
+        await delay(interval);
+    }
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

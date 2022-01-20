@@ -58,7 +58,6 @@ export const Viewer = {
     'fetching-video-detail': 'Fetching video detail...',
     'fetch-video-detail-error': 'Failed to fetch video detail',
     'detect-video-error': 'Can\'t recognize video',
-    'user_interaction_dashcam_icon_tapped': 'Dashcam Icon Tapped',
     ...datePickerShortcuts,
     'no-video-found': 'No video found',
     'no-video-found-in-range': 'No video found in range',

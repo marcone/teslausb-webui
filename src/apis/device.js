@@ -1,4 +1,4 @@
-import {cacheBustinguURL, delay, callCgi} from './common';
+import {cacheBustinguURL, delay, callCgi} from './helper';
 
 export function triggerArchiveSync() {
     return callCgi('/cgi-bin/trigger_sync.sh', 'trigger sync');

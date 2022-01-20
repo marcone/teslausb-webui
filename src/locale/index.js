@@ -1,3 +1,4 @@
+import {defaultsDeep} from 'lodash';
 import i18nManager from 'veui/managers/i18n';
 import 'veui/locale/en-US';
 import 'veui/locale/zh-Hans';
@@ -8,10 +9,11 @@ i18nManager.locale = getLocale();
 export default i18nManager;
 
 register('en-US', enUs);
-register('zh-Hans', zhHans);
+register('zh-Hans', zhHans, enUs);
 
-function register(locale, nsToDataMap) {
-    Object.entries(nsToDataMap).forEach(([ns, data]) => {
+function register(locale, map, ...fallbacks) {
+    const mapWithFallback = defaultsDeep({}, map, ...fallbacks);
+    Object.entries(mapWithFallback).forEach(([ns, data]) => {
         i18nManager.register(locale, data, {ns: prefixNs(ns)});
     });
 }

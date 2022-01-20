@@ -1,6 +1,7 @@
-import {mapValues, last} from 'lodash';
+import {fromPairs, mapValues, last, intersection} from 'lodash';
 import dayjs from 'dayjs';
-import { callCgi } from './common';
+import {positions} from '@/common';
+import { callCgi } from './helper';
 
 export async function getVideoList() {
     const content = await callCgi('/cgi-bin/videolist.sh', 'get video list');
@@ -39,6 +40,7 @@ export async function getVideoList() {
     for (const [, sequences] of Object.entries(groups)) {
         for (const [, sequence] of Object.entries(sequences)) {
             sequence.clips = Object.values(sequence.clips).sort((a, b) => a.date - b.date);
+            sequence.clips = sequence.clips.filter(clip => intersection(Object.keys(clip), positions).length === 4);
         }
     }
 
@@ -113,7 +115,7 @@ export function getVideoInfo(url) {
             });
         });
         video.addEventListener('error', function (e) {
-            reject(new Error('detect-video-error'));
+            reject(video.error);
         });
     });
     video.src = url;

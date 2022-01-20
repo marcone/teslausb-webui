@@ -1,4 +1,3 @@
-import {template} from 'lodash';
 import i18n, {prefixNs} from '../locale';
 
 export default {

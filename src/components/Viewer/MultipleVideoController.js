@@ -57,6 +57,7 @@ class VideoController extends EventEmitter {
         el.muted = true;
         el.preload = 'none';
         el.src = src;
+        el.playsInline = true;
         this.el = el;
 
         this.key = key;

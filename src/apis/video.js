@@ -106,6 +106,7 @@ export function getVideoInfo(url) {
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.muted = true;
+    video.playsInline = true;
     const promise = new Promise(function (resolve, reject) {
         video.addEventListener('loadedmetadata', function () {
             resolve({

@@ -180,7 +180,6 @@ export default {
 
     .item {
         aspect-ratio: 4 / 3;
-        word-break: break-all;
     }
 
     /deep/ video {
@@ -283,6 +282,7 @@ export default {
         display: flex;
         align-items: center;
         text-align: center;
+        word-break: break-all;
     }
 }
 
@@ -296,5 +296,10 @@ export default {
 .meta {
     padding: 0.8em;
     font-size: 1.4em;
+    word-break: break-all;
+
+    &:first-child {
+        word-break: break-word;
+    }
 }
 </style>

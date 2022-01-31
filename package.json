@@ -2,6 +2,10 @@
   "name": "TeslaUSB",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "npm": ">=6.0.0",
+    "node": ">=12.7.0"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build"

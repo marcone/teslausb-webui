@@ -29,7 +29,7 @@ export default {
         async refresh() {
             this.triggered = false;
             try {
-                await callCgi('cgi-bin/diagnose.sh', 'generate diagnostics');
+                await callCgi('/cgi-bin/diagnose.sh', 'generate diagnostics');
                 this.triggered = true;
             }
             catch (e) {

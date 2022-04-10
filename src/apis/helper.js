@@ -8,7 +8,7 @@ export function delay(ms) {
 
 export async function callCgi(url, action) {
     const response = await fetch(url, {method: 'GET'});
-    if (!response.headers.get('content-type').includes('text')) {
+    if (response.status != 200) {
         throw new Error(`fail to ${action}`);
     }
     return response.text();

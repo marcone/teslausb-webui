@@ -1,6 +1,7 @@
 <template>
     <div class="tools">
-        <p>
+        <PiStatus />
+        <p class="primary-button-row">
             <VeuiButton ui="primary" :loading="isTriggering" :disabled="disabled"
                 @click="handleTriggerButtonClick">{{ t('trigger-sync') }}</VeuiButton>
         </p>
@@ -68,5 +69,8 @@ export default {
 <style scoped>
 .tools {
     margin: 16px;
+}
+.primary-button-row {
+    margin-top: 3em;
 }
 </style>

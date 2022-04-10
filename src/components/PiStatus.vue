@@ -8,10 +8,12 @@
             <span>{{ bytes(usedSize) }} / {{ bytes(piStatus.totalSize) }}</span>
             <span class="left-space">({{ piStatus.snapCount }} snapshot{{ piStatus.snapCount > 1 ? 's' : '' }}, {{ secondsToDate(piStatus.snapOldest) }} {{ piStatus.snapCount > 1 ? ' - ' + secondsToDate(piStatus.snapNewest) : '' }})</span>
         </VeuiProgress>
-        <div class="connected-row" @click="handleToggleDriveClick">
-            <span>💾</span>
-            <span>{{ piStatus.drivesActive == "yes" ? '⎯⎯⎯⎯⎯' : '⎯⎯/⎯⎯' }}</span>
-            <span>🚘</span>
+        <div class="connected-row">
+            <span class="clickable" @click="handleToggleDriveClick">
+                <span>💾</span>
+                <span>{{ piStatus.drivesActive == "yes" ? '―――――' : '――/――' }}</span>
+                <span>🚘</span>
+            </span>
         </div>
     </div>
 </template>
@@ -118,7 +120,10 @@ export default {
 }
 
 .connected-row {
-    margin-top: 15px;
+    margin-top: 10px;
+}
+
+.clickable {
     cursor: pointer;
 }
 </style>

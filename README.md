@@ -1,5 +1,9 @@
 # TeslaUSB UI
 
+This was originally contributed to https://github.com/marcone/teslausb
+by Kyle He (https://github.com/599316527), but was moved to a separate
+project.
+
 ## Dev
 
 1. Installl [Nodejs](https://nodejs.org/).

@@ -23,8 +23,5 @@ pnpm-debug.log*
 
 mock
 
-# npm files that can/will be (re)generated
-package-lock.json
-
 # Build output
 new

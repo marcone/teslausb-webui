@@ -18,6 +18,7 @@
     "lodash": "^4.17.21",
     "veui": "^2.4.2",
     "veui-theme-dls": "^2.4.2",
+    "veui-theme-dls-icons": "^2.11.1",
     "vue": "^2.6.11",
     "vue-router": "^3.5.3"
   },

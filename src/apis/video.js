@@ -5,6 +5,9 @@ import { callCgi } from './helper';
 
 export async function getVideoList() {
     const content = await callCgi('/cgi-bin/videolist.sh', 'get video list');
+    if (content == "") {
+      return null;
+    }
     const paths = content.split('\n').filter(line => line.trim());
     const groups = paths.reduce(function (result, path) {
         const [group, sequenceName, filename] = path.split('/');

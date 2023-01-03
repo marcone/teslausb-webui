@@ -1,7 +1,7 @@
 <template>
     <div class="viewer" :class="{compact: env.compact}">
         <div class="selects">
-            <VeuiLoading v-if="!videos" loading>{{ t('fetching-video-list') }}</VeuiLoading>
+            <VeuiLoading v-if="videos!=undefined" loading>{{ t('fetching-video-list') }}</VeuiLoading>
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" :value="layout" :options="layouts" @change="handleLayoutChange" />
         </div>
@@ -32,7 +32,7 @@ export default {
     components: {Player, BingMap, EpisodeSelect},
     data() {
         return {
-            videos: null,
+            videos: undefined,
             layout: '1',
             current: null,
         };
@@ -56,6 +56,9 @@ export default {
         const load = async () => {
             try {
                 this.videos = await getVideoList();
+                if (this.videos == null) {
+                  return;
+                }
                 this.current = getCurrent(this.videos).join('$');
             }
             catch (err) {

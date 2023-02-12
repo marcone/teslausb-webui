@@ -18,7 +18,7 @@ const datePickerShortcuts = {
 export const AppRoot = common;
 
 export const Header = {
-    'back-to-legacy': 'Back to Legacy',
+    'back-to-legacy': 'Back to standard interface',
 };
 
 export const LogPage = common;

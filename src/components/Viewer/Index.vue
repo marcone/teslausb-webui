@@ -1,7 +1,8 @@
 <template>
     <div class="viewer" :class="{compact: env.compact}">
         <div class="selects">
-            <VeuiLoading v-if="videos!=undefined" loading>{{ t('fetching-video-list') }}</VeuiLoading>
+            <VeuiLoading v-if="videos===undefined" loading>{{ t('fetching-video-list') }}</VeuiLoading>
+            <div v-else-if="videos===null">{{ t('no-video-found') }}</div>
             <EpisodeSelect v-else class="episode-select" v-model="current" :videos="videos" />
             <VeuiSelect class="layout-select" :value="layout" :options="layouts" @change="handleLayoutChange" />
         </div>

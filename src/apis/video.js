@@ -8,10 +8,11 @@ export async function getVideoList() {
     if (content == "") {
       return null;
     }
+    console.log("got video list content");
     const paths = content.split('\n').filter(line => line.trim());
     const groups = paths.reduce(function (result, path) {
         const [group, sequenceName, filename] = path.split('/');
-        if (filename.includes('~') || sequenceName.includes('json') || sequenceName.includes('thumb')) {
+        if (filename == "event.mp4" || filename.includes('~') || sequenceName.includes('json') || sequenceName.includes('thumb')) {
             return result;
         }
 
@@ -24,11 +25,14 @@ export async function getVideoList() {
 
         const sequence = result[group][sequenceName];
         if (filename.includes('.mp4')) {
-            const {key, date, pos} = parseMp4Filename(filename);
-            if (!sequence.clips[key]) {
-                sequence.clips[key] = {key, date};
+            try {
+                const {key, date, pos} = parseMp4Filename(filename);
+                if (!sequence.clips[key]) {
+                    sequence.clips[key] = {key, date};
+                }
+                sequence.clips[key][pos] = filename;
+            } catch (e) {
             }
-            sequence.clips[key][pos] = filename;
         }
         else if (filename.includes('thumb')) {
             sequence.thumb = filename;
